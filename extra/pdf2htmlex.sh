@@ -6,11 +6,14 @@ PDF2HTMLEX_URL="https://s3.amazonaws.com/karmanotes-buildpack/pdf2htmlEX-karmano
 
 echo "-----> Installing pdf2htmlex."
 for url in "$FONTFORGE_URL" "$POPPLER_URL" "$PDF2HTMLEX_URL" ; do
-  curl -sS $url -o - | tar -zxf - -C $COMPILE_DIR --strip 2
+  # These are compiled and packaged to end up in /app/vendor/*/.
+  curl -sS $url -o - | tar -zxf -
 done
-# Add an alias to set "data-dir" for pdf2htmlEX every time we call it, since
-# our pre-compiled binary puts the default data-dir somewhere random.
+# Add PATH and LD_LIBRARY_PATH for our things, which end up in /app/vendor/*/
+# on the dyno.
 mkdir -p "$APP_CHECKOUT_DIR"/.profile.d
-cat > "$APP_CHECKOUT_DIR"/.profile.d/pdf2htmlex-alias.sh <<EOF
-    alias pdf2htmlEX="pdf2htmlEX --data-dir \$HOME/$COMPILE_DIR_SUFFIX/share/pdf2htmlEX" 
+cat > "$APP_CHECKOUT_DIR"/.profile.d/pdf2htmlex-paths.sh <<EOF
+    #!/bin/sh
+    export PATH="/app/vendor/pdf2htmlEX/bin:\$PATH"
+    export LD_LIBRARY_PATH="\$LD_LIBRARY_PATH:/app/vendor/poppler/lib:/app/vendor/fontforge/lib"
 EOF
