@@ -84,8 +84,8 @@ echo "-----> Adding PATH environment"
 mkdir -p "$APP_CHECKOUT_DIR"/.profile.d
 cat > "$APP_CHECKOUT_DIR"/.profile.d/path.sh <<EOF
   #!/bin/sh
-  export PATH="$COMPILE_DIR/bin:$PATH"
-  export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$COMPILE_DIR/lib"
+  export PATH=\$HOME/.meteor/heroku_build/bin:\$PATH
+  export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$HOME/.meteor/heroku_build/lib
 EOF
 
 #
