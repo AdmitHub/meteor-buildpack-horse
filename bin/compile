@@ -50,9 +50,14 @@ cd $APP_CHECKOUT_DIR
 # Do the npm-container dance if we use npm. Look for "npm-container" in packages.
 set +e
 grep -q "npm-container" "$APP_CHECKOUT_DIR/.meteor/packages"
-USES_NPM=[ $? -eq 0 ]
+if [ $? -eq 0 ]; then
+    USES_NPM=1
+else
+    USES_NPM=0
+fi
 set -e
 if [ $USES_NPM ]; then
+    echo "-----> Futsing with npm-container"
     # Remove npm-container so it doesn't complain.
     $METEOR remove npm-container
     # Run meteor once to notice npm, which re-adds npm-container, and exits.
