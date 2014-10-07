@@ -14,7 +14,8 @@ APP_CHECKOUT_DIR=$1
 # Where we will install meteor. Has to be outside the APP_CHECKOUT_DIR.
 METEOR_DIR=`mktemp -d "$BUILDPACK_DIR"/meteor-XXXX`
 # Where we'll put things we compile.
-COMPILE_DIR="$APP_CHECKOUT_DIR"/.meteor/heroku_build
+COMPILE_DIR_SUFFIX=".meteor/heroku_build"
+COMPILE_DIR="$APP_CHECKOUT_DIR"/"$COMPILE_DIR_SUFFIX"
 
 # Create directories as needed.
 mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR" "$COMPILE_DIR"
@@ -84,8 +85,8 @@ echo "-----> Adding PATH environment"
 mkdir -p "$APP_CHECKOUT_DIR"/.profile.d
 cat > "$APP_CHECKOUT_DIR"/.profile.d/path.sh <<EOF
   #!/bin/sh
-  export PATH=\$HOME/.meteor/heroku_build/bin:\$PATH
-  export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$HOME/.meteor/heroku_build/lib
+  export PATH=\$HOME/$COMPILE_DIR_SUFFIX/bin:\$PATH
+  export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$HOME/$COMPILE_DIR_SUFFIX/lib
 EOF
 
 #
