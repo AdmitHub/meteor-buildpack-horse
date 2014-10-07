@@ -57,13 +57,6 @@ else
     USES_NPM=0
 fi
 set -e
-if [ $USES_NPM ]; then
-    echo "-----> Futsing with npm-container"
-    # Remove npm-container so it doesn't complain.
-    $METEOR remove npm-container
-    # Run meteor once to notice npm, which re-adds npm-container, and exits.
-    $METEOR
-fi
 
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR, or it will
 # recurse, trying to bundle up its own bundling.
