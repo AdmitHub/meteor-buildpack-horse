@@ -1,0 +1,96 @@
+#!/bin/sh
+
+# Meteor Heroku buildpack for Meteor 0.9.3+.
+
+# fail fast.
+set -e
+# debug verbosely.
+set -x
+
+# Get the path to dir one above this file.
+BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
+# Get the directory our app is checked out in (the "BUILD_DIR"), passed by Heroku
+APP_CHECKOUT_DIR=$1
+# Where we will install meteor. Has to be outside the APP_CHECKOUT_DIR.
+METEOR_DIR=`mktemp -d "$BUILDPACK_DIR"/meteor-XXXX`
+# Where we'll put things we compile.
+COMPILE_DIR="$APP_CHECKOUT_DIR"/.meteor/heroku_build
+
+# Create directories as needed.
+mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR" "$COMPILE_DIR"
+
+# Update the path so we get npm, etc.
+PATH="$COMPILE_DIR/bin:$PATH"
+
+#
+# Install node
+#
+echo "-----> Installing node"
+NODE_VERSION=`curl -sS --get https://semver.io/node/resolve`
+NODE_URL="http://s3pository.heroku.com/node/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz"
+curl -sS $NODE_URL -o - | tar -zxf - -C $COMPILE_DIR --strip 1
+# Export some environment variables for npm to use when compiling stuff.
+export npm_config_prefix="$COMPILE_DIR"
+export CPATH="$COMPILE_DIR"/include
+export CPPPATH="$CPATH"
+
+#
+# Install meteor
+#
+echo "-----> Installing meteor"
+curl -sS https://install.meteor.com | HOME="$METEOR_DIR" /bin/sh
+METEOR="$METEOR_DIR/.meteor/meteor" # The meteor binary.
+METEOR=/usr/local/bin/meteor
+
+#
+# Build the meteor app!
+#
+echo "-----> Bundling bundle"
+cd $APP_CHECKOUT_DIR
+
+# Do the npm-container dance if we use npm. Look for "npm-container" in packages.
+set +e
+grep -q "npm-container" "$APP_CHECKOUT_DIR/.meteor/packages"
+USES_NPM=[ $? -eq 0 ]
+set -e
+if [ $USES_NPM ]; then
+    # Remove npm-container so it doesn't complain.
+    $METEOR remove npm-container
+    # Run meteor once to notice npm, which re-adds npm-container, and exits.
+    $METEOR
+fi
+
+# Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR, or it will
+# recurse, trying to bundle up its own bundling.
+BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
+$METEOR build --directory $BUNDLE_DEST
+mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
+rmdir $BUNDLE_DEST
+
+# Run npm in the built target if we're using it
+if [ $USES_NPM ]; then
+    cd "$COMPILE_DIR/app/programs/server" && npm install
+fi
+
+#
+# Environment
+#
+# Add an export of PATH which includes our compile dir.
+echo "-----> Adding PATH environment"
+mkdir -p "$APP_CHECKOUT_DIR"/.profile.d
+cat > "$APP_CHECKOUT_DIR"/.profile.d/path.sh <<EOF
+  #!/bin/sh
+  export PATH="$COMPILE_DIR/bin:$PATH"
+  export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$COMPILE_DIR/lib"
+EOF
+
+#
+# Extras
+#
+
+# source scripts in 'extra' dir, if any.  Create them for custom stuff like
+# binary dependencies, phantomjs for spiderable, etc.
+echo "-----> Running extras"
+for file in `ls "$BUILDPACK_DIR"/extra | sort`; do
+    . "$BUILDPACK_DIR"/extra/$file 
+done

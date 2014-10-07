@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# No-op
+exit 0
