@@ -7,7 +7,7 @@ PDF2HTMLEX_URL="https://s3.amazonaws.com/karmanotes-buildpack/pdf2htmlEX-karmano
 echo "-----> Installing pdf2htmlex."
 for url in "$FONTFORGE_URL" "$POPPLER_URL" "$PDF2HTMLEX_URL" ; do
   # These are compiled and packaged to end up in /app/vendor/*/.
-  curl -sS $url -o - | tar -zxf -
+  curl -sS $url -o - | tar -zxf - -C $APP_CHECKOUT_DIR
 done
 # Add PATH and LD_LIBRARY_PATH for our things, which end up in /app/vendor/*/
 # on the dyno.
