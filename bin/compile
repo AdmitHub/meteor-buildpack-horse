@@ -48,16 +48,6 @@ METEOR="$METEOR_DIR/.meteor/meteor" # The meteor binary.
 echo "-----> Bundling bundle"
 cd $APP_CHECKOUT_DIR
 
-# Do the npm-container dance if we use npm. Look for "npm-container" in packages.
-set +e
-grep -q "npm-container" "$APP_CHECKOUT_DIR/.meteor/packages"
-if [ $? -eq 0 ]; then
-    USES_NPM=1
-else
-    USES_NPM=0
-fi
-set -e
-
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR, or it will
 # recurse, trying to bundle up its own bundling.
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
@@ -65,10 +55,16 @@ $METEOR build --directory $BUNDLE_DEST
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 rmdir $BUNDLE_DEST
 
-# Run npm in the built target if we're using it
-if [ $USES_NPM ]; then
-    cd "$COMPILE_DIR/app/programs/server" && npm install
-fi
+# If we use npm, run npm install.  To do this we use grep to look for
+# npm-container, which returns non-zero if it doesn't find it.  So disable
+# fail-fast for the length of the "grep" invocation, and re-enable it
+# immediately after.
+set +e && \
+    grep -q "npm-container" "$APP_CHECKOUT_DIR/.meteor/packages" && \
+    set -e && \
+    cd "$COMPILE_DIR"/app/programs/server && \
+    npm install
+set -e # Fail fast again whether or not we did npm.
 
 #
 # Environment
