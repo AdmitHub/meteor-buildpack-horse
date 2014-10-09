@@ -55,16 +55,10 @@ $METEOR build --directory $BUNDLE_DEST
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 rmdir $BUNDLE_DEST
 
-# If we use npm, run npm install.  To do this we use grep to look for
-# npm-container, which returns non-zero if it doesn't find it.  So disable
-# fail-fast for the length of the "grep" invocation, and re-enable it
-# immediately after.
-set +e && \
-    grep -q "npm-container" "$APP_CHECKOUT_DIR/.meteor/packages" && \
-    set -e && \
-    cd "$COMPILE_DIR"/app/programs/server && \
-    npm install
-set -e # Fail fast again whether or not we did npm.
+# If we use npm, run npm install.
+if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then
+  cd "$COMPILE_DIR"/app/programs/server && npm install
+fi
 
 #
 # Environment
