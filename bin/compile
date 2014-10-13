@@ -5,7 +5,7 @@
 # fail fast.
 set -e
 # debug verbosely.
-#set -x
+set -x
 
 # Get the path to dir one above this file.
 BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
