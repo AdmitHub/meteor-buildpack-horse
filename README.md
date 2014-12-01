@@ -3,6 +3,9 @@
 A heroku buildpack for Meteor v0.9.3+, using meteor's native packaging system
 (sorry meteorite) and designed to be as simple and readable as possible.
 
+    $ heroku config:set BUILDPACK_URL=https://github.com/AdmitHub/meteor-buildpack-horse
+    # Then push your code to your heroku app to trigger a build.
+
 ## Extras
 
 The basic buildpack should function correctly for any normal-ish meteor app,
