@@ -8,7 +8,7 @@ To use this with your meteor app and heroku:
 1. Set up your app to [deploy to heroku with git](https://devcenter.heroku.com/articles/git).
 2. Set this repository as the buildpack URL:
 
-    heroku config:set BUILDPACK_URL https://github.com/AdmitHub/meteor-buildpack-horse.git
+        heroku config:set BUILDPACK_URL https://github.com/AdmitHub/meteor-buildpack-horse.git
 
 Once that's done, you can deploy your app using this build pack any time by pushing to heroku:
 
