@@ -1,7 +1,8 @@
 # Meteor Buildpack Horse
 
-A heroku buildpack for Meteor v0.9.3+, using meteor's native packaging system
-(sorry meteorite) and designed to be as simple and readable as possible.
+A heroku buildpack for Meteor v0.9.3+ (including 1.0 and up), using meteor's
+native packaging system (sorry meteorite) and designed to be as simple and
+readable as possible.
 
 To use this with your meteor app and heroku:
 
