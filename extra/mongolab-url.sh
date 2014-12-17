@@ -3,6 +3,6 @@
 echo "-----> Adding MONGOHQ_URL -> MONGO_URL env"
 cat > "$APP_CHECKOUT_DIR"/.profile.d/mongo.sh <<EOF
   #!/bin/sh
-  export MONGO_URL=\${MONGO_URL:-\$MONGOHQ_URL}
+  export MONGO_URL=\${MONGO_URL:-\$MONGOLAB_URI}
 EOF
 
