@@ -16,6 +16,10 @@ To use this with your meteor app and heroku:
         
         heroku addons:add mongolab
 
+4. If it isn't set already, be sure to set the ``ROOT_URL`` for meteor (replace URL with whatever is appropriate):
+
+        heroku config:set ROOT_URL=https://<yourapp>.herokuapp.com
+
 Once that's done, you can deploy your app using this build pack any time by pushing to heroku:
 
     git push heroku master
