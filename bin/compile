@@ -57,9 +57,15 @@ BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
 # should be no-op for any builds that don't have mobile targets.
 HOME=$METEOR_DIR $METEOR remove-platform ios android
 # </hack>
-# <hack issue="">
+
+# <hack issue="https://github.com/meteor/meteor/issues/2796>
+# the root cause seems to be related to https://github.com/meteor/meteor/issues/2606
+# Also remember to use 'heroku stack:set cedar-14' to allow certain recompiled
+# packages to use the newer version memcpy that ships with a more recent version
+# of glibc (contained in cedar-14)
 HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
 # </hack>
+
 HOME=$METEOR_DIR $METEOR build --directory $BUNDLE_DEST
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 rmdir $BUNDLE_DEST
