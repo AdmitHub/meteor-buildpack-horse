@@ -58,7 +58,7 @@ BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
 HOME=$METEOR_DIR $METEOR remove-platform ios android
 # </hack>
 # <hack issue="">
-timeout -s9 60 HOME=$METEOR_DIR $METEOR --settings settings.json || true
+HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
 # </hack>
 HOME=$METEOR_DIR $METEOR build --directory $BUNDLE_DEST
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
