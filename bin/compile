@@ -7,6 +7,22 @@ set -e
 # debug verbosely.
 #set -x
 
+#Load config vars into environment (from https://devcenter.heroku.com/articles/buildpack-api)
+export_env_dir() {
+    env_dir=$3
+    whitelist_regex=${2:-''}
+    blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
+    if [ -d "$env_dir" ]; then
+	for e in $(ls $env_dir); do
+	    echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+	    export "$e=$(cat $env_dir/$e)"
+	    :
+	done
+    fi
+}
+
+export_env_dir $ENV_DIR
+
 # Get the path to dir one above this file.
 BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
 # Get the directory our app is checked out in (the "BUILD_DIR"), passed by Heroku
