@@ -63,7 +63,9 @@ HOME=$METEOR_DIR $METEOR remove-platform ios android
 # Also remember to use 'heroku stack:set cedar-14' to allow certain recompiled
 # packages to use the newer version memcpy that ships with a more recent version
 # of glibc (contained in cedar-14)
-HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
+if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then 
+    HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
+fi
 # </hack>
 
 HOME=$METEOR_DIR $METEOR build --directory $BUNDLE_DEST
