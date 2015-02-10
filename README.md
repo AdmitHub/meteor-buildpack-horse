@@ -54,7 +54,7 @@ has been reported on https://github.com/meteor/meteor/issues/2606, but it may ta
 a while to have it fixed. In the meanwhile you can circumvent the problem by setting 
 the following variable in your Heroku Config Vars:
    
-   BUILDPACK_PRELAUNCH_METEOR
+    BUILDPACK_PRELAUNCH_METEOR
 
 ## Why horse?
 
