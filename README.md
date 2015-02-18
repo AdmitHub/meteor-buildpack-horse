@@ -1,8 +1,9 @@
 # Meteor Buildpack Horse
 
 A heroku buildpack for Meteor v0.9.3+ (including 1.0 and up), using meteor's
-native packaging system (sorry meteorite) and designed to be as simple and
-readable as possible.
+native packaging system and designed to be as simple and readable as possible.
+
+*NOTE: previous versious of this buildpack used Compose (aka MongoHQ) which no longer offers a free tier to heroku users. If you still need MongoHQ, use the [MongoHQ branch](https://github.com/AdmitHub/meteor-buildpack-horse/tree/mongohq).*
 
 To use this with your meteor app and heroku:
 
@@ -10,6 +11,14 @@ To use this with your meteor app and heroku:
 2. Set this repository as the buildpack URL:
 
         heroku config:set BUILDPACK_URL=https://github.com/AdmitHub/meteor-buildpack-horse.git
+
+3. Add the MongoLab addon:
+        
+        heroku addons:add mongolab
+
+4. If it isn't set already, be sure to set the ``ROOT_URL`` for meteor (replace URL with whatever is appropriate):
+
+        heroku config:set ROOT_URL=https://<yourapp>.herokuapp.com
 
 Once that's done, you can deploy your app using this build pack any time by pushing to heroku:
 
@@ -23,7 +32,7 @@ just add shell scripts to the "extras" folder and they will get sourced into the
 build.
 
 Extras included in this branch:
- - ``mongohq-url.sh``: Set ``MONGO_URL`` to the value of ``MONGOHQ_URL``
+ - ``mongolab.sh``: Set ``MONGO_URL`` to the value of ``MONGOLAB_URI``.
  - ``phantomjs.sh``: Include phantomjs for use with ``spiderable``.
 
 ## Where things go
