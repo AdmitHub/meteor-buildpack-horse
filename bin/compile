@@ -7,6 +7,22 @@ set -e
 # debug verbosely.
 #set -x
 
+#Load config vars into environment (from https://devcenter.heroku.com/articles/buildpack-api)
+export_env_dir() {
+    env_dir=$1
+    whitelist_regex=${2:-''}
+    blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
+    if [ -d "$env_dir" ]; then
+	for e in $(ls $env_dir); do
+	    echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+	    export "$e=$(cat $env_dir/$e)"
+	    :
+	done
+    fi
+}
+
+export_env_dir $3
+
 # Get the path to dir one above this file.
 BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
 # Get the directory our app is checked out in (the "BUILD_DIR"), passed by Heroku
@@ -57,6 +73,18 @@ BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
 # should be no-op for any builds that don't have mobile targets.
 HOME=$METEOR_DIR $METEOR remove-platform ios android
 # </hack>
+
+# <hack issue="https://github.com/meteor/meteor/issues/2796>
+# the root cause seems to be related to https://github.com/meteor/meteor/issues/2606
+# Also remember to use 'heroku stack:set cedar-14' to allow certain recompiled
+# packages to use the newer version memcpy that ships with a more recent version
+# of glibc (contained in cedar-14)
+if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then 
+echo "-----> Pre-launching Meteor to create packages assets and prevent bundling from failing"
+    HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
+fi
+# </hack>
+
 HOME=$METEOR_DIR $METEOR build --directory $BUNDLE_DEST
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 rmdir $BUNDLE_DEST
