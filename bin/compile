@@ -27,7 +27,7 @@ PATH="$COMPILE_DIR/bin:$PATH"
 # Install node
 #
 echo "-----> Installing node"
-NODE_VERSION=`curl -sS --get https://semver.io/node/resolve`
+NODE_VERSION=`curl -sS --get https://semver.io/node/resolve/0.10.x`
 NODE_URL="http://s3pository.heroku.com/node/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz"
 curl -sS $NODE_URL -o - | tar -zxf - -C $COMPILE_DIR --strip 1
 # Export some environment variables for npm to use when compiling stuff.
@@ -51,6 +51,12 @@ cd $APP_CHECKOUT_DIR
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR, or it will
 # recurse, trying to bundle up its own bundling.
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
+# <hack issue='https://github.com/meteor/meteor/issues/2867'>
+# Temporary hack to address meteor failing to bundle if mobile targets are
+# included but server URL is not (issue #2).  Remove mobile targets. This
+# should be no-op for any builds that don't have mobile targets.
+HOME=$METEOR_DIR $METEOR remove-platform ios android
+# </hack>
 HOME=$METEOR_DIR $METEOR build --directory $BUNDLE_DEST
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 rmdir $BUNDLE_DEST
