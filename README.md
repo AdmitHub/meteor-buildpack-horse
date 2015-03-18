@@ -46,6 +46,16 @@ subdirectories.  Those directories are added to ``$PATH`` and
 So ``$COMPILE_DIR/bin`` etc are great places to put any extra binaries or stuff
 if you need to in custom extras.
 
+## Workarounds 
+
+Meteor is under active developement, recent changes in its core broke support for 
+certain meteor packages designed to access their own assets at first run. The issue
+has been reported on https://github.com/meteor/meteor/issues/2606, but it may take 
+a while to have it fixed. In the meanwhile you can circumvent the problem by setting 
+the following variable in your Heroku Config Vars:
+   
+    BUILDPACK_PRELAUNCH_METEOR
+
 ## Why horse?
 
 There are a gazillian forks and branches of various buildpacks remixing the
