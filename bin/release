@@ -1,8 +1,16 @@
 #!/bin/sh
 
+# Default dir
+DIR=".meteor"
+
+# The Iron scaffolding tool (https://github.com/iron-meteor/iron-cli) place the
+# Meteor app in /app/ instead of in the root. So let's try the /app/ folder if
+# there is no Meteor app in the root.
+[ ! -d "$DIR" ] && DIR="app/$DIR"
+
 cat <<EOF
 addons:
   - mongolab
 default_process_types:
-  web: .meteor/heroku_build/bin/node .meteor/heroku_build/app/main.js
+  web: $DIR/heroku_build/bin/node $DIR/heroku_build/app/main.js
 EOF

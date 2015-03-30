@@ -27,6 +27,10 @@ export_env_dir $3
 BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
 # Get the directory our app is checked out in (the "BUILD_DIR"), passed by Heroku
 APP_CHECKOUT_DIR=$1
+# The Iron scaffolding tool (https://github.com/iron-meteor/iron-cli) place the
+# Meteor app in /app/ instead of in the root. So let's try the /app/ folder if
+# there is no Meteor app in the root.
+[ ! -d "$APP_CHECKOUT_DIR/.meteor" ] && APP_CHECKOUT_DIR="$APP_CHECKOUT_DIR/app"
 # Where we will install meteor. Has to be outside the APP_CHECKOUT_DIR.
 METEOR_DIR=`mktemp -d "$BUILDPACK_DIR"/meteor-XXXX`
 # Where we'll put things we compile.
@@ -114,5 +118,5 @@ EOF
 # binary dependencies, phantomjs for spiderable, etc.
 echo "-----> Running extras"
 for file in `ls "$BUILDPACK_DIR"/extra | sort`; do
-    . "$BUILDPACK_DIR"/extra/$file 
+    . "$BUILDPACK_DIR"/extra/$file
 done
