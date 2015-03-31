@@ -6,7 +6,7 @@ DIR=".meteor"
 # The Iron scaffolding tool (https://github.com/iron-meteor/iron-cli) place the
 # Meteor app in /app/ instead of in the root. So let's try the /app/ folder if
 # there is no Meteor app in the root.
-[ ! -d "$DIR" ] && DIR="app/$DIR"
+[ ! -d "$DIR" ] && DIR="/app/$DIR"
 
 cat <<EOF
 addons:
