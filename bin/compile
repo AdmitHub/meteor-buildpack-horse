@@ -120,5 +120,3 @@ echo "-----> Running extras"
 for file in `ls "$BUILDPACK_DIR"/extra | sort`; do
     . "$BUILDPACK_DIR"/extra/$file
 done
-
-ls -R /
