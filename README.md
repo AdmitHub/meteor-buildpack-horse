@@ -14,7 +14,7 @@ To use this with your meteor app and heroku:
 
 3. Add the MongoLab addon:
         
-        heroku addons:add mongolab
+        heroku addons:create mongolab
 
 4. If it isn't set already, be sure to set the ``ROOT_URL`` for meteor (replace URL with whatever is appropriate):
 
