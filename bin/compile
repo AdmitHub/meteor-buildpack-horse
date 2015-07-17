@@ -27,10 +27,14 @@ export_env_dir $3
 BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
 # Get the directory our app is checked out in (the "BUILD_DIR"), passed by Heroku
 APP_CHECKOUT_DIR=$1
+# Where the Meteor app source code is located
+APP_SOURCE_DIR="$APP_CHECKOUT_DIR"
 # The Iron scaffolding tool (https://github.com/iron-meteor/iron-cli) place the
 # Meteor app in /app/ instead of in the root. So let's try the /app/ folder if
 # there is no Meteor app in the root.
-[ ! -d "$APP_CHECKOUT_DIR/.meteor" ] && APP_CHECKOUT_DIR="$APP_CHECKOUT_DIR/app"
+if [ ! -d "$APP_SOURCE_DIR/.meteor" ] && [ -d "$APP_SOURCE_DIR/app/.meteor" ]; then
+  APP_SOURCE_DIR="$APP_SOURCE_DIR/app/"
+fi
 # Where we will install meteor. Has to be outside the APP_CHECKOUT_DIR.
 METEOR_DIR=`mktemp -d "$BUILDPACK_DIR"/meteor-XXXX`
 # Where we'll put things we compile.
@@ -66,7 +70,7 @@ METEOR="$METEOR_DIR/.meteor/meteor" # The meteor binary.
 # Build the meteor app!
 #
 echo "-----> Bundling bundle"
-cd $APP_CHECKOUT_DIR
+cd $APP_SOURCE_DIR
 
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR, or it will
 # recurse, trying to bundle up its own bundling.
@@ -83,7 +87,7 @@ HOME=$METEOR_DIR $METEOR remove-platform ios android
 # Also remember to use 'heroku stack:set cedar-14' to allow certain recompiled
 # packages to use the newer version memcpy that ships with a more recent version
 # of glibc (contained in cedar-14)
-if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then 
+if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then
 echo "-----> Pre-launching Meteor to create packages assets and prevent bundling from failing"
     HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
 fi
