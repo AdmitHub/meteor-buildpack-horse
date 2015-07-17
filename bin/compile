@@ -75,12 +75,6 @@ cd $APP_SOURCE_DIR
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR, or it will
 # recurse, trying to bundle up its own bundling.
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
-# <hack issue='https://github.com/meteor/meteor/issues/2867'>
-# Temporary hack to address meteor failing to bundle if mobile targets are
-# included but server URL is not (issue #2).  Remove mobile targets. This
-# should be no-op for any builds that don't have mobile targets.
-HOME=$METEOR_DIR $METEOR remove-platform ios android
-# </hack>
 
 # <hack issue="https://github.com/meteor/meteor/issues/2796>
 # the root cause seems to be related to https://github.com/meteor/meteor/issues/2606
@@ -89,11 +83,12 @@ HOME=$METEOR_DIR $METEOR remove-platform ios android
 # of glibc (contained in cedar-14)
 if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then
 echo "-----> Pre-launching Meteor to create packages assets and prevent bundling from failing"
-    HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
+    HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json --server $ROOT_URL || true
 fi
 # </hack>
 
-HOME=$METEOR_DIR $METEOR build --directory $BUNDLE_DEST
+echo "-----> Building Meteor with ROOT_URL: $ROOT_URL"
+HOME=$METEOR_DIR $METEOR build --server $ROOT_URL --directory $BUNDLE_DEST
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 rmdir $BUNDLE_DEST
 
