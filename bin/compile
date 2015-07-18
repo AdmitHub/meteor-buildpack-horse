@@ -85,6 +85,7 @@ HOME=$METEOR_DIR $METEOR remove-platform ios android
 # of glibc (contained in cedar-14)
 if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then 
 echo "-----> Pre-launching Meteor to create packages assets and prevent bundling from failing"
+    HOME=$METEOR_DIR $METEOR remove-platform ios android
     HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
 fi
 # </hack>
