@@ -10,11 +10,11 @@ To use this with your meteor app and heroku:
 1. Set up your app to [deploy to heroku with git](https://devcenter.heroku.com/articles/git).
 2. Set this repository as the buildpack URL:
 
-        heroku config:set BUILDPACK_URL=https://github.com/AdmitHub/meteor-buildpack-horse.git
+        heroku buildpacks:set https://github.com/AdmitHub/meteor-buildpack-horse.git
 
 3. Add the MongoLab addon:
         
-        heroku addons:add mongolab
+        heroku addons:create mongolab
 
 4. If it isn't set already, be sure to set the ``ROOT_URL`` for meteor (replace URL with whatever is appropriate):
 
