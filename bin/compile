@@ -13,13 +13,21 @@ export_env_dir() {
     whitelist_regex=${2:-''}
     blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
     if [ -d "$env_dir" ]; then
-	for e in $(ls $env_dir); do
-	    echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
-	    export "$e=$(cat $env_dir/$e)"
-	    :
-	done
+        for e in $(ls $env_dir); do
+            echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+            export "$e=$(cat $env_dir/$e)"
+            :
+        done
     fi
 }
+
+echo "-----> Lising HEROKU_ environment variables"
+echo "HEROKU_APP_ID:           $HEROKU_APP_ID"
+echo "HEROKU_APP_NAME:         $HEROKU_APP_NAME"
+echo "HEROKU_DYNO_ID:          $HEROKU_DYNO_ID"
+echo "HEROKU_RELEASE_VERSION:  $HEROKU_RELEASE_VERSION"
+echo "HEROKU_SLUG_COMMIT:      $HEROKU_SLUG_COMMIT"
+echo "HEROKU_SLUG_DESCRIPTION: $HEROKU_SLUG_DESCRIPTION"
 
 export_env_dir $3
 
@@ -33,7 +41,7 @@ APP_SOURCE_DIR="$APP_CHECKOUT_DIR"
 # Meteor app in /app/ instead of in the root. So let's try the /app/ folder if
 # there is no Meteor app in the root.
 if [ ! -d "$APP_SOURCE_DIR/.meteor" ] && [ -d "$APP_SOURCE_DIR/app/.meteor" ]; then
-  APP_SOURCE_DIR="$APP_SOURCE_DIR/app/"
+    APP_SOURCE_DIR="$APP_SOURCE_DIR/app/"
 fi
 # Where we will install meteor. Has to be outside the APP_CHECKOUT_DIR.
 METEOR_DIR=`mktemp -d "$BUILDPACK_DIR"/meteor-XXXX`
@@ -88,6 +96,13 @@ echo "-----> Pre-launching Meteor to create packages assets and prevent bundling
 fi
 # </hack>
 
+# Create ROOT_URL using HEROKU_APP_NAME when not informed.
+if [ ! -d "$ROOT_URL" ]; then
+    echo "-----> No ROOT_URL informed, creating it using HEROKU_APP_NAME"
+    ROOT_URL="https://$HEROKU_APP_NAME.herokuapp.com"
+    echo "$ROOT_URL"
+fi
+
 echo "-----> Building Meteor with ROOT_URL: $ROOT_URL"
 HOME=$METEOR_DIR $METEOR build --server $ROOT_URL --directory $BUNDLE_DEST
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
@@ -95,7 +110,7 @@ rmdir $BUNDLE_DEST
 
 # If we use npm, run npm install.
 if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then
-  cd "$COMPILE_DIR"/app/programs/server && npm install
+    cd "$COMPILE_DIR"/app/programs/server && npm install
 fi
 
 #
