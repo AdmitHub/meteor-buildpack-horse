@@ -21,7 +21,7 @@ export_env_dir() {
     fi
 }
 
-echo "-----> Lising HEROKU_ environment variables"
+echo "-----> Listing HEROKU_ environment variables"
 echo "HEROKU_APP_ID:           $HEROKU_APP_ID"
 echo "HEROKU_APP_NAME:         $HEROKU_APP_NAME"
 echo "HEROKU_DYNO_ID:          $HEROKU_DYNO_ID"
@@ -97,9 +97,9 @@ fi
 # </hack>
 
 # Create ROOT_URL using HEROKU_APP_NAME when not informed.
-if [ ! -d "$ROOT_URL" ]; then
+if [ -n "${ROOT_URL}" ]
     echo "-----> No ROOT_URL informed, creating it using HEROKU_APP_NAME"
-    ROOT_URL="https://$HEROKU_APP_NAME.herokuapp.com"
+    export ROOT_URL="https://$HEROKU_APP_NAME.herokuapp.com"
     echo "$ROOT_URL"
 fi
 
