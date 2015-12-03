@@ -97,7 +97,7 @@ fi
 # </hack>
 
 # Create ROOT_URL using HEROKU_APP_NAME when not informed.
-if [ -n "${ROOT_URL}" ]
+if [ -n "${ROOT_URL}" ]; then
     echo "-----> No ROOT_URL informed, creating it using HEROKU_APP_NAME"
     export ROOT_URL="https://$HEROKU_APP_NAME.herokuapp.com"
     echo "$ROOT_URL"
