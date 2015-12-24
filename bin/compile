@@ -53,7 +53,7 @@ COMPILE_DIR="$APP_CHECKOUT_DIR"/"$COMPILE_DIR_SUFFIX"
 mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR" "$COMPILE_DIR"
 
 # Update the path so we get npm, etc.
-PATH="$COMPILE_DIR/bin:$PATH"
+PATH="$METEOR_DIR/.meteor/:$COMPILE_DIR/bin:$PATH"
 
 #
 # Install node
