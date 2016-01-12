@@ -66,6 +66,9 @@ echo "-----> Installing meteor"
 curl -sS https://install.meteor.com | HOME="$METEOR_DIR" /bin/sh
 METEOR="$METEOR_DIR/.meteor/meteor" # The meteor binary.
 
+# Adding meteor to $PATH
+PATH="$METEOR_DIR/.meteor:$PATH"
+
 #
 # Build the meteor app!
 #
