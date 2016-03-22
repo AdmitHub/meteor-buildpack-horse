@@ -28,7 +28,7 @@ Once that's done, you can deploy your app using this build pack any time by push
 
 The basic buildpack should function correctly for any normal-ish meteor app,
 with or without npm-container.  For extra steps needed for your particular build,
-just add shell scripts to the "extras" folder and they will get sourced into the 
+just add shell scripts to the `extra` folder and they will get sourced into the 
 build.
 
 Extras included in this branch:
