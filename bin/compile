@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Meteor Heroku buildpack for Meteor 0.9.3+.
+# Meteor Heroku buildpack for Meteor
 
 # fail fast.
 set -e
@@ -47,7 +47,7 @@ METEOR_PRETTY_OUTPUT=0
 mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR" "$COMPILE_DIR"
 
 # Update the path so we get npm, etc.
-PATH="$COMPILE_DIR/bin:$PATH"
+PATH="$METEOR_DIR/.meteor:$COMPILE_DIR/bin:$PATH"
 
 #
 # Install node
@@ -67,6 +67,14 @@ export CPPPATH="$CPATH"
 echo "-----> Installing meteor"
 curl -sS https://install.meteor.com | HOME="$METEOR_DIR" /bin/sh
 METEOR="$METEOR_DIR/.meteor/meteor" # The meteor binary.
+
+# Maybe update release. Upgrade only if needed because it's slow.
+CUR_RELEASE=`HOME=$METEOR_DIR $METEOR --version | sed -e 's/Meteor /METEOR@/'`
+APP_RELEASE=`cat "$APP_CHECKOUT_DIR/.meteor/release"`
+if test "$CUR_RELEASE" != "$APP_RELEASE" ; then
+  echo "-----> Upgrading meteor to $APP_RELEASE"
+  HOME=$METEOR_DIR $METEOR update --release `cat "$APP_CHECKOUT_DIR/.meteor/release"`
+fi
 
 #
 # Build the meteor app!
