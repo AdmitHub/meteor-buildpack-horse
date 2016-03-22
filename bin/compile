@@ -72,6 +72,11 @@ METEOR="$METEOR_DIR/.meteor/meteor" # The meteor binary.
 echo "-----> Bundling bundle"
 cd $APP_SOURCE_DIR
 
+# If we use npm on root, run npm install.
+if [ -e "$APP_SOURCE_DIR"/package.json ]; then
+  npm install
+fi
+
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR, or it will
 # recurse, trying to bundle up its own bundling.
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
