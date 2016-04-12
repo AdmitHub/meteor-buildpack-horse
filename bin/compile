@@ -96,7 +96,7 @@ BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
 # If we remove both platforms the mobile hot code push will not work.
 # TODO: this means mobile HCP is broken for android-only apps, we need a
 # better solution
-HOME=$METEOR_DIR $METEOR remove-platform android || true
+# HOME=$METEOR_DIR $METEOR remove-platform android || true
 
 # <hack issue="https://github.com/meteor/meteor/issues/2796>
 # the root cause seems to be related to https://github.com/meteor/meteor/issues/2606
@@ -110,7 +110,7 @@ fi
 # </hack>
 
 echo "-----> Building Meteor with ROOT_URL: $ROOT_URL"
-HOME=$METEOR_DIR $METEOR build --server $ROOT_URL --directory $BUNDLE_DEST
+HOME=$METEOR_DIR $METEOR build --server-only --server $ROOT_URL --directory $BUNDLE_DEST
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 rmdir $BUNDLE_DEST
 
