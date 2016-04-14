@@ -9,16 +9,16 @@ set -e
 
 #Load config vars into environment (from https://devcenter.heroku.com/articles/buildpack-api)
 export_env_dir() {
-    env_dir=$1
-    whitelist_regex=${2:-''}
-    blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
-    if [ -d "$env_dir" ]; then
-	for e in $(ls $env_dir); do
-	    echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
-	    export "$e=$(cat $env_dir/$e)"
-	    :
-	done
-    fi
+  env_dir=$1
+  whitelist_regex=${2:-''}
+  blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
+  if [ -d "$env_dir" ]; then
+  for e in $(ls $env_dir); do
+    echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+    export "$e=$(cat $env_dir/$e)"
+    :
+  done
+  fi
 }
 
 echo "-----> Listing HEROKU_ environment variables"
@@ -113,9 +113,16 @@ HOME=$METEOR_DIR $METEOR remove-platform android || true
 # of glibc (contained in cedar-14)
 if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then
 echo "-----> Pre-launching Meteor to create packages assets and prevent bundling from failing"
-    HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
+  HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
 fi
 # </hack>
+
+# Create ROOT_URL using HEROKU_APP_NAME when not informed.
+if [ ! -n "${ROOT_URL}" ]; then
+  echo "-----> No ROOT_URL informed, creating it using HEROKU_APP_NAME"
+  export ROOT_URL="https://$HEROKU_APP_NAME.herokuapp.com"
+  echo "$ROOT_URL"
+fi
 
 echo "-----> Building Meteor with ROOT_URL: $ROOT_URL"
 HOME=$METEOR_DIR $METEOR build --server $ROOT_URL --directory $BUNDLE_DEST
@@ -147,5 +154,5 @@ EOF
 # binary dependencies, phantomjs for spiderable, etc.
 echo "-----> Running extras"
 for file in `ls "$BUILDPACK_DIR"/extra | sort`; do
-    . "$BUILDPACK_DIR"/extra/$file
+  . "$BUILDPACK_DIR"/extra/$file
 done
