@@ -15,15 +15,20 @@ To use this with your meteor app and heroku:
         
         heroku addons:create mongolab
 
+4. Set the `ROOT_URL` environment variable. This is required for bundling and running the app.
+
+        heroku config:set ROOT_URL="https://<appname>.herokuapp.com" # or other URL
+
 Once that's done, you can deploy your app using this build pack any time by pushing to heroku:
 
     git push heroku master
+
 
 ## Environment
 
 The following are some important environment variables for bundling and running your meteor app on heroku.  Depending on your settings, you may need to override these on heroku.  See [heroku's documentation](https://devcenter.heroku.com/articles/config-vars) for how to set these.
 
- - `ROOT_URL`: The root URL for your app, needed for bundling as well as running. It will default to `https://<appname>.herokuapp.com` if not defined.
+ - `ROOT_URL`: The root URL for your app, needed for bundling as well as running. If you enable the [Dyno Metadata](https://devcenter.heroku.com/articles/dyno-metadata) labs addon and `ROOT_URL` is undefined, it will default to "https://<appname>.herokuapp.com").
  - `MONGO_URL`: The URL to mongodb.  It not defined, it will default the value of `MONGODB_URI`, `MONGOLAB_URI`, or `MONGOHQ_URL` (in order).  If you don't use mongolab as a regular addon (and none of the fallbacks are defined), you'll need to set this.
  - `METEOR_APP_DIR`: The relative path to the root of your meteor app within your git repository (i.e. the path to the directory that contains `.meteor/`). The buildpack will look in the root of your repository and `app/` subdirectory; if you put your app anywhere else (like `src/`), define this variable to tell the buildpack where to look.
  - `BUILDPACK_PRELAUNCH_METEOR`: If your app uses packages that need to compile their assets on first run, you may need meteor to launch prior to bundling.  If this applies for you, define `BUILDPACK_PRELAUNCH_METEOR=1`. [Reference issue](https://github.com/meteor/meteor/issues/2606).

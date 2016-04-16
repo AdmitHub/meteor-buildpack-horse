@@ -66,10 +66,17 @@ mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR" "$COMPILE_DIR"
 # Update the path so we get npm, etc.
 PATH="$METEOR_DIR/.meteor:$COMPILE_DIR/bin:$PATH"
 
-# Set a default ROOT_URL if one is not defined. This logic is duplicated in
-# extra/root_url.sh so that it repeats on dyno restart.
-if [ -z $ROOT_URL ] ; then
+# Set a default ROOT_URL if one is not defined. Currently, HEROKU_APP_NAME is
+# only available if you enable the labs addon "Heroku Dyno Metadata":
+# https://devcenter.heroku.com/articles/dyno-metadata
+# This logic is duplicated in extra/root_url.sh so that it repeats on dyno
+# restart.
+if [ -z "$ROOT_URL" ] && [ -n "$HEROKU_APP_NAME" ] ; then
   export ROOT_URL="https://${HEROKU_APP_NAME}.herokuapp.com"
+fi
+if [ -n "$ROOT_URL" ] ; then
+  echo "FATAL: ROOT_URL is not defined."
+  exit 1
 fi
 
 #
