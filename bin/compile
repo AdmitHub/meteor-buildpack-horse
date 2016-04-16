@@ -81,7 +81,7 @@ CUR_RELEASE=`HOME=$METEOR_DIR $METEOR --version | sed -e 's/Meteor /METEOR@/'`
 APP_RELEASE=`cat "$APP_SOURCE_DIR/.meteor/release"`
 if test "$CUR_RELEASE" != "$APP_RELEASE" ; then
   echo "-----> Upgrading meteor to $APP_RELEASE"
-  HOME=$METEOR_DIR $METEOR update --release `cat "$APP_CHECKOUT_DIR/.meteor/release"`
+  HOME=$METEOR_DIR $METEOR update --release $APP_RELEASE
 fi
 
 #
