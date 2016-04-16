@@ -29,14 +29,29 @@ export_env_dir $3
 BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
 # Get the directory our app is checked out in (the "BUILD_DIR"), passed by Heroku
 APP_CHECKOUT_DIR=$1
-# Where the Meteor app source code is located
-APP_SOURCE_DIR="$APP_CHECKOUT_DIR"
-# The Iron scaffolding tool (https://github.com/iron-meteor/iron-cli) place the
-# Meteor app in /app/ instead of in the root. So let's try the /app/ folder if
-# there is no Meteor app in the root.
+
+#
+# Find the meteor app ($APP_SOURCE_DIR).
+#
+
+# Set meteor app dir's location to the root of the git repo, plus the value of
+# METEOR_APP_DIR (which defaults empty).  If you put the meteor app in src/ or
+# some other subdirectory, define METEOR_APP_DIR.
+APP_SOURCE_DIR="${APP_CHECKOUT_DIR}"
+if [ -n "$METEOR_APP_DIR" ]; then
+  APP_SOURCE_DIR="${APP_SOURCE_DIR}/${METEOR_APP_DIR}"
+fi
+
+# Try "$APP_SOURCE_DIR/app/" if meteor app isn't there (the "Iron scaffolding
+# tool" default).
 if [ ! -d "$APP_SOURCE_DIR/.meteor" ] && [ -d "$APP_SOURCE_DIR/app/.meteor" ]; then
   APP_SOURCE_DIR="$APP_SOURCE_DIR/app/"
 fi
+if [ ! -d "$APP_SOURCE_DIR/.meteor" ]; then
+  echo "FATAL: Can't find meteor app. Set BUILDPACK_APP_DIR to the relative location of the meteor app within your repository if it's not in the root or 'app/' supdirectory.  (Tried ${APP_SOURCE_DIR})"
+  exit 1
+fi
+
 # Where we will install meteor. Has to be outside the APP_CHECKOUT_DIR.
 METEOR_DIR=`mktemp -d "$BUILDPACK_DIR"/meteor-XXXX`
 # Where we'll put things we compile.
@@ -123,7 +138,7 @@ fi
 #
 # Environment
 #
-# Add an export of PATH which includes our compile dir.
+# Add an export of PATH which includes our compile dir, etc.
 echo "-----> Adding PATH environment"
 mkdir -p "$APP_CHECKOUT_DIR"/.profile.d
 cat > "$APP_CHECKOUT_DIR"/.profile.d/path.sh <<EOF
@@ -137,7 +152,8 @@ EOF
 #
 
 # source scripts in 'extra' dir, if any.  Create them for custom stuff like
-# binary dependencies, phantomjs for spiderable, etc.
+# binary dependencies, phantomjs for spiderable, additional environment
+# settings, etc.
 echo "-----> Running extras"
 for file in `ls "$BUILDPACK_DIR"/extra | sort`; do
   . "$BUILDPACK_DIR"/extra/$file
