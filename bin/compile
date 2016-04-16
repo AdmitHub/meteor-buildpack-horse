@@ -9,18 +9,18 @@ set -e
 # debug verbosely.
 #set -x
 
-#Load config vars into environment (from https://devcenter.heroku.com/articles/buildpack-api)
+# Load config vars into environment (from https://devcenter.heroku.com/articles/buildpack-api)
 export_env_dir() {
-    env_dir=$1
-    whitelist_regex=${2:-''}
-    blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
-    if [ -d "$env_dir" ]; then
-	for e in $(ls $env_dir); do
-	    echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
-	    export "$e=$(cat $env_dir/$e)"
-	    :
-	done
-    fi
+  env_dir=$1
+  whitelist_regex=${2:-''}
+  blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
+  if [ -d "$env_dir" ]; then
+    for e in $(ls $env_dir); do
+      echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+      export "$e=$(cat $env_dir/$e)"
+      :
+    done
+  fi
 }
 
 export_env_dir $3
@@ -51,10 +51,10 @@ mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR" "$COMPILE_DIR"
 # Update the path so we get npm, etc.
 PATH="$METEOR_DIR/.meteor:$COMPILE_DIR/bin:$PATH"
 
-# Set a default root URL if one is not defined. This logic is duplicated in
+# Set a default ROOT_URL if one is not defined. This logic is duplicated in
 # extra/root_url.sh so that it repeats on dyno restart.
 if [ -z $ROOT_URL ] ; then
-    export ROOT_URL="https://${HEROKU_APP_NAME}.herokuapp.com"
+  export ROOT_URL="https://${HEROKU_APP_NAME}.herokuapp.com"
 fi
 
 #
@@ -100,11 +100,11 @@ fi
 # assets at runtime, and thus they are not available for bundling unless meteor
 # has been launched.  To opt-in to this, set BUILDPACK_PRELAUNCH_METEOR=1.
 if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then
-    echo "-----> BUILDPACK_PRELAUNCH_METEOR: Pre-launching meteor to build packages assets"
-    # Remove the Android platform because it fails due to the Android tools not
-    # being installed, but leave the iOS platform because it's ignored.
-    HOME=$METEOR_DIR $METEOR remove-platform android || true
-    HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
+  echo "-----> BUILDPACK_PRELAUNCH_METEOR: Pre-launching meteor to build packages assets"
+  # Remove the Android platform because it fails due to the Android tools not
+  # being installed, but leave the iOS platform because it's ignored.
+  HOME=$METEOR_DIR $METEOR remove-platform android || true
+  HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
 fi
 
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR, or it will
@@ -140,5 +140,5 @@ EOF
 # binary dependencies, phantomjs for spiderable, etc.
 echo "-----> Running extras"
 for file in `ls "$BUILDPACK_DIR"/extra | sort`; do
-    . "$BUILDPACK_DIR"/extra/$file
+  . "$BUILDPACK_DIR"/extra/$file
 done
