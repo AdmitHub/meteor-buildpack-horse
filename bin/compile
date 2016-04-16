@@ -1,6 +1,8 @@
 #!/bin/sh
 
-# Meteor Heroku buildpack for Meteor
+#
+# Heroku buildpack for Meteor
+#
 
 # fail fast.
 set -e
@@ -49,6 +51,12 @@ mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR" "$COMPILE_DIR"
 # Update the path so we get npm, etc.
 PATH="$METEOR_DIR/.meteor:$COMPILE_DIR/bin:$PATH"
 
+# Set a default root URL if one is not defined. This logic is duplicated in
+# extra/root_url.sh so that it repeats on dyno restart.
+if [ -z $ROOT_URL ] ; then
+    export ROOT_URL="https://${HEROKU_APP_NAME}.herokuapp.com"
+fi
+
 #
 # Install node
 #
@@ -87,30 +95,23 @@ if [ -e "$APP_SOURCE_DIR"/package.json ]; then
   npm install
 fi
 
+# Related to https://github.com/meteor/meteor/issues/2796 and 
+# https://github.com/meteor/meteor/issues/2606.  Some packages only build their
+# assets at runtime, and thus they are not available for bundling unless meteor
+# has been launched.  To opt-in to this, set BUILDPACK_PRELAUNCH_METEOR=1.
+if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then
+    echo "-----> BUILDPACK_PRELAUNCH_METEOR: Pre-launching meteor to build packages assets"
+    # Remove the Android platform because it fails due to the Android tools not
+    # being installed, but leave the iOS platform because it's ignored.
+    HOME=$METEOR_DIR $METEOR remove-platform android || true
+    HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
+fi
+
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR, or it will
 # recurse, trying to bundle up its own bundling.
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
-
-# Remove the Android platform because it fails due to the Android tools not
-# being installed, but leave the iOS platform because it's ignored.
-# If we remove both platforms the mobile hot code push will not work.
-# TODO: this means mobile HCP is broken for android-only apps, we need a
-# better solution
-HOME=$METEOR_DIR $METEOR remove-platform android || true
-
-# <hack issue="https://github.com/meteor/meteor/issues/2796>
-# the root cause seems to be related to https://github.com/meteor/meteor/issues/2606
-# Also remember to use 'heroku stack:set cedar-14' to allow certain recompiled
-# packages to use the newer version memcpy that ships with a more recent version
-# of glibc (contained in cedar-14)
-if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then
-echo "-----> Pre-launching Meteor to create packages assets and prevent bundling from failing"
-    HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
-fi
-# </hack>
-
 echo "-----> Building Meteor with ROOT_URL: $ROOT_URL"
-HOME=$METEOR_DIR $METEOR build --server $ROOT_URL --directory $BUNDLE_DEST
+HOME=$METEOR_DIR $METEOR build --server $ROOT_URL --server-only --directory $BUNDLE_DEST
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 rmdir $BUNDLE_DEST
 
