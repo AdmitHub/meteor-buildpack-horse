@@ -108,8 +108,12 @@ METEOR="$METEOR_DIR/.meteor/meteor" # The meteor binary.
 CUR_RELEASE=`HOME=$METEOR_DIR $METEOR --version | sed -e 's/Meteor /METEOR@/'`
 APP_RELEASE=`cat "$APP_SOURCE_DIR/.meteor/release"`
 if test "$CUR_RELEASE" != "$APP_RELEASE" ; then
-  echo "-----> Upgrading meteor to $APP_RELEASE"
-  HOME=$METEOR_DIR $METEOR update --release $APP_RELEASE
+  # Sort CUR_RELEASE and APP_RELEASE and find the oldest
+  OLDER=`echo -e "$CUR_RELEASE\n$APP_RELEASE" | sort -V | head -n1`
+  if [ "$CUR_RELEASE" = "$OLDER" ]; then
+    echo "-----> Upgrading meteor to $APP_RELEASE"
+    HOME=$METEOR_DIR $METEOR update --release $APP_RELEASE
+  fi
 fi
 
 #
