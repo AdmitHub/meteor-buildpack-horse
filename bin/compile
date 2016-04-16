@@ -109,8 +109,8 @@ CUR_RELEASE=`HOME=$METEOR_DIR $METEOR --version | sed -e 's/Meteor /METEOR@/'`
 APP_RELEASE=`cat "$APP_SOURCE_DIR/.meteor/release"`
 if test "$CUR_RELEASE" != "$APP_RELEASE" ; then
   # Sort CUR_RELEASE and APP_RELEASE and find the oldest
-  OLDER=`echo -e "$CUR_RELEASE\n$APP_RELEASE" | sort -V | head -n1`
-  if [ "$CUR_RELEASE" = "$OLDER" ]; then
+  OLDER_RELEASE=`echo "$CUR_RELEASE\n$APP_RELEASE" | sort --version-sort | head -n1`
+  if [ "$CUR_RELEASE" = "$OLDER_RELEASE" ]; then
     echo "-----> Upgrading meteor to $APP_RELEASE"
     HOME=$METEOR_DIR $METEOR update --release $APP_RELEASE
   fi
@@ -121,6 +121,24 @@ fi
 #
 echo "-----> Bundling bundle"
 cd $APP_SOURCE_DIR
+
+# Determine if we have --server-only flag capability. Allow non-zero return from grep.
+echo "-----> Checking if this meteor version supports --server-only"
+set +e
+HAS_SERVER_ONLY=`HOME=$METEOR_DIR $METEOR help build | grep -e '--server-only'`
+set -e
+if [ -n "$HAS_SERVER_ONLY" ] ; then
+  SERVER_ONLY_FLAG='--server-only'
+else
+  SERVER_ONLY_FLAG=""
+fi
+# Remove the Android platform if we don't support the --server-only flag.  iOS
+# platform gets ignored properly.
+if [ -z "$SERVER_ONLY_FLAG" ]; then
+  echo "-----> Attempting to remove android platform."
+  HOME=$METEOR_DIR $METEOR remove-platform android || true
+  echo "-----> Moving on."
+fi
 
 # If we use npm on root, run npm install.
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
@@ -143,7 +161,7 @@ fi
 # recurse, trying to bundle up its own bundling.
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
 echo "-----> Building Meteor with ROOT_URL: $ROOT_URL"
-HOME=$METEOR_DIR $METEOR build --server $ROOT_URL --server-only --directory $BUNDLE_DEST
+HOME=$METEOR_DIR $METEOR build --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 rmdir $BUNDLE_DEST
 
