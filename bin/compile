@@ -89,7 +89,7 @@ fi
 # Install node
 #
 echo "-----> Installing node"
-NODE_VERSION=`curl -sS --get https://semver.io/node/resolve/0.10.x`
+NODE_VERSION=`curl -sS --get https://semver.io/node/resolve/5.x.x`
 NODE_URL="http://s3pository.heroku.com/node/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz"
 curl -sS $NODE_URL -o - | tar -zxf - -C $COMPILE_DIR --strip 1
 # Export some environment variables for npm to use when compiling stuff.
@@ -145,7 +145,7 @@ if [ -e "$APP_SOURCE_DIR"/package.json ]; then
   npm install
 fi
 
-# Related to https://github.com/meteor/meteor/issues/2796 and 
+# Related to https://github.com/meteor/meteor/issues/2796 and
 # https://github.com/meteor/meteor/issues/2606.  Some packages only build their
 # assets at runtime, and thus they are not available for bundling unless meteor
 # has been launched.  To opt-in to this, set BUILDPACK_PRELAUNCH_METEOR=1.
