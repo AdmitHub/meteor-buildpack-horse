@@ -43,7 +43,6 @@ build.
 Extras included in this branch:
  - `mongo_url.sh`: If `MONGO_URL` is empty, set it to the value of `MONGODB_URI`, `MONGOLAB_URI`, or `MONGOHQ_URL` (in order).
  - `root_url.sh`: If `ROOT_URL` is empty and `HEROKU_APP_NAME` is available, set `ROOT_URL` to `https://$HEROKU_APP_NAME.herokuapp.com`
- - `phantomjs.sh`: Include phantomjs for use with `spiderable`.
 
 ## Where things go
 
