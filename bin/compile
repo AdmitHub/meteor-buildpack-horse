@@ -187,8 +187,7 @@ EOF
 #
 
 # source scripts in 'extra' dir, if any.  Create them for custom stuff like
-# binary dependencies, phantomjs for spiderable, additional environment
-# settings, etc.
+# binary dependencies, additional environment settings, etc.
 echo "-----> Running extras"
 for file in `ls "$BUILDPACK_DIR"/extra | sort`; do
   . "$BUILDPACK_DIR"/extra/$file
