@@ -64,7 +64,7 @@ METEOR_DIR=`mktemp -d "$BUILDPACK_DIR"/meteor-XXXX`
 COMPILE_DIR_SUFFIX=".meteor/heroku_build"
 COMPILE_DIR="$APP_CHECKOUT_DIR"/"$COMPILE_DIR_SUFFIX"
 # Try to minimize meteor's printing, unless we're running verbosely.
-if [ -z "$BUILDPCK_VERBOSE" ]; then
+if [ -z "$BUILDPACK_VERBOSE" ]; then
   METEOR_PRETTY_OUTPUT=0
 fi
 
