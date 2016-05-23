@@ -23,6 +23,18 @@ Once that's done, you can deploy your app using this build pack any time by push
 
     git push heroku master
 
+## DOKKU
+
+If you are using Dokku you need to do the following:
+
+1. Create `.buildpacks` file and put `https://github.com/AdmitHub/meteor-buildpack-horse.git` in it.
+2. Make sure mongo plugin is installed
+3. Create mongo instance `dokku mongo:create my-mongo`
+4. Link mongo to your app `dokku mongo:link my-mongo my-app`
+5. Set `ROOT_URL` variable: `dokku config:set my-app ROOT_URL=http://my-app.dokkuhost.com`
+6. You are good to push. `git push dokku`
+
+
 ## Environment
 
 The following are some important environment variables for bundling and running your meteor app on heroku.  Depending on your settings, you may need to override these on heroku.  See [heroku's documentation](https://devcenter.heroku.com/articles/config-vars) for how to set these.
