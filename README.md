@@ -55,6 +55,10 @@ subdirectories.  Those directories are added to `$PATH` and
 So `$COMPILE_DIR/bin` etc are great places to put any extra binaries or stuff
 if you need to in custom extras.
 
+## Tips & Tricks
+
+Please help us add tips and tricks to the [wiki](https://github.com/AdmitHub/meteor-buildpack-horse/wiki) for further help, like usage with Dokku or other environments.
+
 ## Why horse?
 
 There are a gazillian forks and branches of various buildpacks remixing the
