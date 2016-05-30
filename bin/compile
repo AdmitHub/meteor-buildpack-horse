@@ -144,8 +144,7 @@ fi
 
 # If we use npm on root, run npm install.
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
-  npm config set production
-  npm install
+  npm install --production
 fi
 
 # Related to https://github.com/meteor/meteor/issues/2796 and 
@@ -171,8 +170,7 @@ rmdir $BUNDLE_DEST
 # If we use npm, run npm install.
 if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then
   cd "$COMPILE_DIR"/app/programs/server
-  npm config set production
-  npm install
+  npm install --production
 fi
 
 #
