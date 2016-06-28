@@ -71,7 +71,7 @@ fi
 # Create directories as needed.
 mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR" "$COMPILE_DIR"
 
-# Update the path to include any binaries we need.
+# Update the path a place to store our compiled app/binaries
 PATH="$METEOR_DIR/.meteor:$COMPILE_DIR/bin:$PATH"
 
 # Set a default ROOT_URL if one is not defined. Currently, HEROKU_APP_NAME is
@@ -162,7 +162,7 @@ if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then
   HOME=$METEOR_DIR $METEOR npm install --production
 fi
 
-# Move meteor installation to where we can use it.
+# Move meteor installation to where we can use it in bin/release
 mv "$METEOR_DIR" "$APP_CHECKOUT_DIR/meteor-dist"
 
 #
@@ -173,7 +173,7 @@ echo "-----> Adding PATH environment"
 mkdir -p "$APP_CHECKOUT_DIR"/.profile.d
 cat > "$APP_CHECKOUT_DIR"/.profile.d/path.sh <<EOF
   #!/bin/sh
-  export PATH=$METEOR_DIR/.meteor:\$HOME/$COMPILE_DIR_SUFFIX/bin:\$PATH
+  export PATH=\$HOME/$COMPILE_DIR_SUFFIX/bin:\$PATH
   export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$HOME/$COMPILE_DIR_SUFFIX/lib
 EOF
 
