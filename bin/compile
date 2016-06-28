@@ -171,7 +171,8 @@ echo "-----> Adding PATH environment"
 mkdir -p "$APP_CHECKOUT_DIR"/.profile.d
 cat > "$APP_CHECKOUT_DIR"/.profile.d/path.sh <<EOF
   #!/bin/sh
-  export PATH=\$METEOR_DIR/.meteor:\$HOME/$COMPILE_DIR_SUFFIX/bin:\$PATH
+  export HOME=$HOME
+  export PATH=$METEOR_DIR/.meteor:\$HOME/$COMPILE_DIR_SUFFIX/bin:\$PATH
   export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$HOME/$COMPILE_DIR_SUFFIX/lib
 EOF
 
