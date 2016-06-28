@@ -60,7 +60,6 @@ fi
 
 # Where we will install meteor. Has to be outside the APP_CHECKOUT_DIR.
 METEOR_DIR=`mktemp -d "$BUILDPACK_DIR"/meteor-XXXX`
-HOME=$METEOR_DIR
 # Where we'll put things we compile.
 COMPILE_DIR_SUFFIX=".meteor/heroku_build"
 COMPILE_DIR="$APP_CHECKOUT_DIR"/"$COMPILE_DIR_SUFFIX"
@@ -92,18 +91,18 @@ fi
 # Install meteor
 #
 echo "-----> Installing meteor"
-curl -sS https://install.meteor.com | /bin/sh
+curl -sS https://install.meteor.com | HOME="$METEOR_DIR" /bin/sh
 METEOR="$METEOR_DIR/.meteor/meteor" # The meteor binary.
 
 # Maybe update release. Upgrade only if needed because it's slow.
-CUR_RELEASE=`$METEOR --version | sed -e 's/Meteor /METEOR@/'`
+CUR_RELEASE=`HOME=$METEOR_DIR $METEOR --version | sed -e 's/Meteor /METEOR@/'`
 APP_RELEASE=`cat "$APP_SOURCE_DIR/.meteor/release"`
 if test "$CUR_RELEASE" != "$APP_RELEASE" ; then
   # Sort CUR_RELEASE and APP_RELEASE and find the oldest
   OLDER_RELEASE=`echo "$CUR_RELEASE\n$APP_RELEASE" | sort --version-sort | head -n1`
   if [ "$CUR_RELEASE" = "$OLDER_RELEASE" ]; then
     echo "-----> Upgrading meteor to $APP_RELEASE"
-    $METEOR update --release $APP_RELEASE
+    HOME=$METEOR_DIR $METEOR update --release $APP_RELEASE
   fi
 fi
 
@@ -116,7 +115,7 @@ cd $APP_SOURCE_DIR
 # Determine if we have --server-only flag capability. Allow non-zero return from grep.
 echo "-----> Checking if this meteor version supports --server-only"
 set +e
-HAS_SERVER_ONLY=`$METEOR help build | grep -e '--server-only'`
+HAS_SERVER_ONLY=`HOME=$METEOR_DIR $METEOR help build | grep -e '--server-only'`
 set -e
 if [ -n "$HAS_SERVER_ONLY" ] ; then
   SERVER_ONLY_FLAG='--server-only'
@@ -127,14 +126,14 @@ fi
 # platform gets ignored properly.
 if [ -z "$SERVER_ONLY_FLAG" ]; then
   echo "-----> Attempting to remove android platform."
-  $METEOR remove-platform android || true
+  HOME=$METEOR_DIR $METEOR remove-platform android || true
   echo "-----> Moving on."
 fi
 
 # If we use npm on root, run npm install.  Don't use `--production` here, as we
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
-  $METEOR npm install
+  HOME=$METEOR_DIR $METEOR npm install
 fi
 
 # Related to https://github.com/meteor/meteor/issues/2796 and 
@@ -145,23 +144,26 @@ if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then
   echo "-----> BUILDPACK_PRELAUNCH_METEOR: Pre-launching meteor to build packages assets"
   # Remove the Android platform because it fails due to the Android tools not
   # being installed, but leave the iOS platform because it's ignored.
-  $METEOR remove-platform android || true
-  timeout -s9 60 $METEOR --settings settings.json || true
+  HOME=$METEOR_DIR $METEOR remove-platform android || true
+  HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
 fi
 
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR, or it will
 # recurse, trying to bundle up its own bundling.
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
 echo "-----> Building Meteor with ROOT_URL: $ROOT_URL"
-$METEOR build --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
+HOME=$METEOR_DIR $METEOR build --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 rmdir $BUNDLE_DEST
 
 # Run npm install on the built slug; only for `--production` dependencies.
 if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then
   cd "$COMPILE_DIR"/app/programs/server
-  $METEOR npm install --production
+  HOME=$METEOR_DIR $METEOR npm install --production
 fi
+
+# Move meteor installation to where we can use it.
+mv "$METEOR_DIR" "$APP_CHECKOUT_DIR/meteor-dist"
 
 #
 # Environment
@@ -171,7 +173,6 @@ echo "-----> Adding PATH environment"
 mkdir -p "$APP_CHECKOUT_DIR"/.profile.d
 cat > "$APP_CHECKOUT_DIR"/.profile.d/path.sh <<EOF
   #!/bin/sh
-  export HOME=$HOME
   export PATH=$METEOR_DIR/.meteor:\$HOME/$COMPILE_DIR_SUFFIX/bin:\$PATH
   export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$HOME/$COMPILE_DIR_SUFFIX/lib
 EOF
