@@ -88,10 +88,20 @@ if [ -z "$ROOT_URL" ] ; then
 fi
 
 #
+# Check Meteor App Version
+#
+APP_RELEASE=`cat "$APP_SOURCE_DIR/.meteor/release" | sed -e 's/METEOR@//'`
+
+#
 # Install node
 #
 echo "-----> Installing node"
-NODE_VERSION=`curl -sS --get https://semver.io/node/resolve/0.10.x`
+if echo $APP_RELEASE | grep -Eq '^1.4'; then
+  NODE_VERSION=`curl -sS --get https://semver.io/node/resolve/4.4.x`
+else
+  NODE_VERSION=`curl -sS --get https://semver.io/node/resolve/0.10.x`
+fi
+echo "Selected Node $NODE_VERSION for Meteor $APP_RELEASE"
 NODE_URL="http://s3pository.heroku.com/node/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz"
 curl -sS $NODE_URL -o - | tar -zxf - -C $COMPILE_DIR --strip 1
 # Export some environment variables for npm to use when compiling stuff.
@@ -107,8 +117,7 @@ curl -sS https://install.meteor.com | HOME="$METEOR_DIR" /bin/sh
 METEOR="$METEOR_DIR/.meteor/meteor" # The meteor binary.
 
 # Maybe update release. Upgrade only if needed because it's slow.
-CUR_RELEASE=`HOME=$METEOR_DIR $METEOR --version | sed -e 's/Meteor /METEOR@/'`
-APP_RELEASE=`cat "$APP_SOURCE_DIR/.meteor/release"`
+CUR_RELEASE=`HOME=$METEOR_DIR $METEOR --version | sed -e 's/Meteor //'`
 if test "$CUR_RELEASE" != "$APP_RELEASE" ; then
   # Sort CUR_RELEASE and APP_RELEASE and find the oldest
   OLDER_RELEASE=`echo "$CUR_RELEASE\n$APP_RELEASE" | sort --version-sort | head -n1`
