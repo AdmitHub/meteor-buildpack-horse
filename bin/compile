@@ -142,6 +142,7 @@ set -e
 if [ $METEOR_NPM_EXIT_CODE -eq 0 ]; then
   # Newer meteor: it knows how to find its own npm/node.
   METEOR_NPM="$METEOR npm"
+  echo "-----> Using 'meteor node', with version: `HOME=$METEOR_DIR $METEOR node --version`"
 else
   # Older meteor: search out npm/node within $METEOR_DIR.
   BARE_VERSION=`cat $APP_RELEASE | sed -e 's/METEOR@//'`
@@ -155,6 +156,7 @@ else
   # messy `find` with the release version. Use a hard link so that we can move
   # $METEOR_DIR around without the link breaking.
   ln $METEOR_NODE $METEOR_DIR/meteor-node
+  echo "-----> Using searched-for node: `$METEOR_DIR/meteor-node --version`"
 fi
 
 # If we use npm on root, run npm install.  Don't use `--production` here, as we
