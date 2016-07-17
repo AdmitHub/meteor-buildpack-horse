@@ -54,7 +54,7 @@ if [ ! -d "$APP_SOURCE_DIR/.meteor" ] && [ -d "$APP_SOURCE_DIR/app/.meteor" ]; t
   APP_SOURCE_DIR="$APP_SOURCE_DIR/app/"
 fi
 if [ ! -d "$APP_SOURCE_DIR/.meteor" ]; then
-  echo "FATAL: Can't find meteor app. Set METEOR_APP_DIR to the relative location of the meteor app within your repository if it's not in the root or 'app/' supdirectory.  (Tried ${APP_SOURCE_DIR})"
+  echo "FATAL: Can't find meteor app. Set METEOR_APP_DIR to the relative location of the meteor app within your repository if it's not in the root or 'app/' subdirectory.  (Tried ${APP_SOURCE_DIR})"
   exit 1
 fi
 
