@@ -142,13 +142,24 @@ if [ -z "$SERVER_ONLY_FLAG" ]; then
   echo "-----> Moving on."
 fi
 
+# Reinstall npm to support scoped packages (see: https://github.com/meteor/meteor/issues/4985)
+if [ -n "$METEOR_BUILD_REINSTALL_NPM" ]; then
+  echo "-----> Upgrading npm version in all meteor-tool versions."
+  METEOR_TOOL_DIR=$METEOR_DIR/.meteor/packages/meteor-tool
+  for meteor_tool_version_dir in $METEOR_TOOL_DIR/*; do
+    cd $meteor_tool_version_dir/mt-*/dev_bundle/lib
+    ../bin/npm install npm
+  done
+  cd $APP_SOURCE_DIR
+fi
+
 # If we use npm on root, run npm install.  Don't use `--production` here, as we
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
   npm install
 fi
 
-# Related to https://github.com/meteor/meteor/issues/2796 and 
+# Related to https://github.com/meteor/meteor/issues/2796 and
 # https://github.com/meteor/meteor/issues/2606.  Some packages only build their
 # assets at runtime, and thus they are not available for bundling unless meteor
 # has been launched.  To opt-in to this, set BUILDPACK_PRELAUNCH_METEOR=1.
