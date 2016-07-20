@@ -1,3 +1,7 @@
+# Changes from AdmitHub/meteor-buildpack-horse:
+
+Set `METEOR_BUILD_REINSTALL_NPM` to `true` if you want to reinstall `npm` before attempting to build your Meteor application. This will allow Meteor to use scoped packages. [See here for more info](https://github.com/meteor/meteor/issues/4985).
+
 # Meteor Buildpack Horse
 
 [![Horse](https://i.imgur.com/YhIL9zM.jpg)](https://commons.wikimedia.org/wiki/File:Draw-Costa_Rican-2smallest.jpg)
@@ -12,7 +16,7 @@ To use this with your meteor app and heroku:
         heroku buildpacks:set https://github.com/AdmitHub/meteor-buildpack-horse.git
 
 3. Add the MongoLab addon:
-        
+
         heroku addons:create mongolab
 
 4. Set the `ROOT_URL` environment variable. This is required for bundling and running the app.  Either define it explicitly, or enable the [Dyno Metadata](https://devcenter.heroku.com/articles/dyno-metadata) labs addon to default to `https://<appname>.herokuapp.com`.
@@ -37,7 +41,7 @@ The following are some important environment variables for bundling and running 
 
 The basic buildpack should function correctly for any normal-ish meteor app,
 with or without npm-container.  For extra steps needed for your particular build,
-just add shell scripts to the `extra` folder and they will get sourced into the 
+just add shell scripts to the `extra` folder and they will get sourced into the
 build.
 
 Extras included in this branch:
