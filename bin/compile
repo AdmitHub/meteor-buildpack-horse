@@ -91,7 +91,7 @@ fi
 # Install node
 #
 echo "-----> Installing node"
-NODE_VERSION=`curl -sS --get https://semver.io/node/resolve/0.10.x`
+NODE_VERSION=`curl -sS --get https://semver.io/node/resolve/4.4.x`
 NODE_URL="http://s3pository.heroku.com/node/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz"
 curl -sS $NODE_URL -o - | tar -zxf - -C $COMPILE_DIR --strip 1
 # Export some environment variables for npm to use when compiling stuff.
