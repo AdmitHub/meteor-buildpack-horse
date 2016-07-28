@@ -133,6 +133,7 @@ METEOR_NODE=`find $METEOR_DIR -wholename "*$APP_RELEASE*/dev_bundle/bin/node"`
 METEOR_NPM=`echo "$METEOR_NPM" | sed -e 's/[[:space:]]*$//'`
 METEOR_NODE=`echo "$METEOR_NODE" | sed -e 's/[[:space:]]*$//'`
 if [ -z "$METEOR_NPM" ] || [ -z "$METEOR_NODE" ] ; then
+  ls -R "$METEOR_DIR"
   echo "FATAL: Can't find npm/node within meteor bundle. This is a bug. Please open an issue at https://github.com/AdmitHub/meteor-buildpack-horse.";
   exit 1
 fi
