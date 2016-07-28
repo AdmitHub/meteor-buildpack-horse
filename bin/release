@@ -4,5 +4,5 @@ cat <<EOF
 addons:
   - mongolab
 default_process_types:
-  web: HOME=.meteor-dist ./meteor-dist/.meteor/meteor node .meteor/heroku_build/app/main.js || HOME=.meteor-dist .meteor-dist/meteor-node .meteor/heroku_build/app/main.js
+  web: HOME=.meteor/heroku_build/bin/node .meteor/hoerku_build/app/main.js
 EOF
