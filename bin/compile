@@ -91,7 +91,7 @@ fi
 # Install meteor
 #
 echo "-----> Installing meteor"
-APP_RELEASE=`cat "$APP_SOURCE_DIR/.meteor/release"` | sed -e 's/METEOR@//'
+APP_RELEASE=`cat "$APP_SOURCE_DIR/.meteor/release" | sed -e 's/METEOR@//'`
 curl -sS "https://install.meteor.com/?release=$APP_RELEASE" | HOME="$METEOR_DIR" /bin/sh
 METEOR="$METEOR_DIR/.meteor/meteor" # The meteor binary.
 
