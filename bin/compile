@@ -137,14 +137,14 @@ if [ -z "$METEOR_NPM" ] || [ -z "$METEOR_NODE" ] ; then
   exit 1
 fi
 METEOR_NPM_BIN_DIR=`dirname -z "$METEOR_NPM"`
-METEOR_NPM_LIB_DIR=`dirname -z "$METEOR_NPM_BIN_DIR`/lib
+METEOR_NPM_NODE_MODULES_DIR="`dirname -z "$METEOR_NPM_BIN_DIR"`/lib/node_modules"
 
 # Copy npm/node into place.
 NPM="$COMPILE_DIR"/bin/npm
 NODE="$COMPILE_DIR"/bin/node
 cp "$METEOR_NPM" "$NPM"
 cp "$METEOR_NODE" "$NODE"
-cp -r "$METEOR_NPM_LIB_DIR/lib/node_modules" "$COMPILE_DIR/lib/"
+cp -r "$METEOR_NPM_NODE_MODULES_DIR" "$COMPILE_DIR/lib/"
 
 echo "-----> Using node: `$NODE --version`"
 echo "----->    and npm: `$NPM --version`"
