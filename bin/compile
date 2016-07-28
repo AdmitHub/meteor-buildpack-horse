@@ -136,6 +136,8 @@ if [ -z "$METEOR_NPM" ] || [ -z "$METEOR_NODE" ] ; then
   echo "FATAL: Can't find npm/node within meteor bundle. This is a bug. Please open an issue at https://github.com/AdmitHub/meteor-buildpack-horse.";
   exit 1
 fi
+# Add npm to path so that 1.4's npm-rebuild.js will function.
+PATH="$PATH:`dirname $METEOR_NPM`"
 
 # Copy node into place for production.
 NODE="$COMPILE_DIR"/bin/node
