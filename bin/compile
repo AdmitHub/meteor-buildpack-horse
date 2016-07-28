@@ -69,7 +69,7 @@ if [ -z "$BUILDPACK_VERBOSE" ]; then
 fi
 
 # Create directories as needed.
-mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR" "$COMPILE_DIR"
+mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR" "$COMPILE_DIR" "$COMPILE_DIR/bin"
 
 # Update the path a place to store our compiled app/binaries
 PATH="$METEOR_DIR/.meteor:$COMPILE_DIR/bin:$PATH"
