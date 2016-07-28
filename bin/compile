@@ -69,7 +69,8 @@ if [ -z "$BUILDPACK_VERBOSE" ]; then
 fi
 
 # Create directories as needed.
-mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR" "$COMPILE_DIR" "$COMPILE_DIR/bin"
+mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR"
+mkdir -p "$COMPILE_DIR" "$COMPILE_DIR/bin" "$COMPILE_DIR/lib"
 
 # Update the path a place to store our compiled app/binaries
 PATH="$METEOR_DIR/.meteor:$COMPILE_DIR/bin:$PATH"
@@ -135,12 +136,15 @@ if [ -z "$METEOR_NPM" ] || [ -z "$METEOR_NODE" ] ; then
   echo "FATAL: Can't find npm/node within meteor bundle. This is a bug. Please open an issue at https://github.com/AdmitHub/meteor-buildpack-horse.";
   exit 1
 fi
+METEOR_NPM_BIN_DIR=`dirname -z "$METEOR_NPM"`
+METEOR_NPM_LIB_DIR=`dirname -z "$METEOR_NPM_BIN_DIR`/lib
 
 # Copy npm/node into place.
 NPM="$COMPILE_DIR"/bin/npm
 NODE="$COMPILE_DIR"/bin/node
 cp "$METEOR_NPM" "$NPM"
 cp "$METEOR_NODE" "$NODE"
+cp -r "$METEOR_NPM_LIB_DIR/lib/node_modules" "$COMPILE_DIR/lib/"
 
 echo "-----> Using node: `$NODE --version`"
 echo "----->    and npm: `$NPM --version`"
