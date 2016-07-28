@@ -31,10 +31,16 @@ if [ -n "${BUILDPACK_VERBOSE+1}" ]; then
   set -x
 fi
 
+
 # Get the path to dir one above this file.
 BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
 # Get the directory our app is checked out in (the "BUILD_DIR"), passed by Heroku
 APP_CHECKOUT_DIR=$1
+CACHE_DIR=$2
+if [ -n "${BUILDPACK_CLEAR_CACHE+1}" ]; then
+  echo "----> Clearing cache dir."
+  rm -rf "$CACHE_DIR"
+fi
 
 #
 # Find the meteor app ($APP_SOURCE_DIR).
@@ -58,8 +64,10 @@ if [ ! -d "$APP_SOURCE_DIR/.meteor" ]; then
   exit 1
 fi
 
+APP_RELEASE=`cat "$APP_SOURCE_DIR/.meteor/release" | sed -e 's/METEOR@//'`
+
 # Where we will install meteor. Has to be outside the APP_CHECKOUT_DIR.
-METEOR_DIR=`mktemp -d "$BUILDPACK_DIR"/meteor-XXXX`
+METEOR_DIR="$CACHE_DIR/$APP_RELEASE"
 # Where we'll put things we compile.
 COMPILE_DIR_SUFFIX=".meteor/heroku_build"
 COMPILE_DIR="$APP_CHECKOUT_DIR"/"$COMPILE_DIR_SUFFIX"
@@ -71,9 +79,6 @@ fi
 # Create directories as needed.
 mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR"
 mkdir -p "$COMPILE_DIR" "$COMPILE_DIR/bin" "$COMPILE_DIR/lib"
-
-# Update the path a place to store our compiled app/binaries
-PATH="$METEOR_DIR/.meteor:$COMPILE_DIR/bin:$PATH"
 
 # Set a default ROOT_URL if one is not defined. Currently, HEROKU_APP_NAME is
 # only available if you enable the labs addon "Heroku Dyno Metadata":
@@ -91,9 +96,11 @@ fi
 #
 # Install meteor
 #
-echo "-----> Installing meteor"
-APP_RELEASE=`cat "$APP_SOURCE_DIR/.meteor/release" | sed -e 's/METEOR@//'`
-curl -sS "https://install.meteor.com/?release=$APP_RELEASE" | HOME="$METEOR_DIR" /bin/sh
+
+if [ ! -e "$METEOR_DIR/.meteor/meteor" ]; then
+  echo "-----> Installing meteor"
+  curl -sS "https://install.meteor.com/?release=$APP_RELEASE" | HOME="$METEOR_DIR" /bin/sh
+fi
 METEOR="$METEOR_DIR/.meteor/meteor" # The meteor binary.
 
 echo "-----> Meteor version: `HOME=$METEOR_DIR $METEOR --version`"
@@ -136,13 +143,14 @@ if [ -z "$METEOR_NPM" ] || [ -z "$METEOR_NODE" ] ; then
   echo "FATAL: Can't find npm/node within meteor bundle. This is a bug. Please open an issue at https://github.com/AdmitHub/meteor-buildpack-horse.";
   exit 1
 fi
-# Add npm to path so that 1.4's npm-rebuild.js will function.
-PATH="$PATH:`dirname $METEOR_NPM`"
 
 # Copy node into place for production.
 NODE="$COMPILE_DIR"/bin/node
 cp "$METEOR_NODE" "$NODE"
 chmod a+x "$NODE"
+
+# Add npm and node path so that 1.4's npm-rebuild.js will function.
+PATH="$METEOR_DIR/.meteor:`dirname $METEOR_NPM`:$COMPILE_DIR/bin:$PATH"
 
 echo "-----> Using node: `$NODE --version`"
 echo "----->    and npm: `$METEOR_NPM --version`"
