@@ -32,6 +32,8 @@ The following are some important environment variables for bundling and running 
  - `METEOR_APP_DIR`: The relative path to the root of your meteor app within your git repository (i.e. the path to the directory that contains `.meteor/`). The buildpack will look in the root of your repository and `app/` subdirectory; if you put your app anywhere else (like `src/`), define this variable to tell the buildpack where to look.
  - `BUILDPACK_PRELAUNCH_METEOR`: If your app uses packages that need to compile their assets on first run, you may need meteor to launch prior to bundling.  If this applies for you, define `BUILDPACK_PRELAUNCH_METEOR=1`. [Reference issue](https://github.com/meteor/meteor/issues/2606).
  - `BUILDPACK_VERBOSE`: Set `BUILDPACK_VERBOSE=1` to enable verbose bash debugging during slug compilation. Only takes effect after the environment variables have been loaded.
+ - `BUILDPACK_CLEAR_CACHE`: This buildpack stores the meteor installation in the [CACHE_DIR](https://devcenter.heroku.com/articles/buildpack-api#caching) to speed up subsequent builds. Set `BUILDPACK_CLEAR_CACHE=1` to clear this cache on startup.
+ - `BUILD_OPTIONS`: Set to any additional options you'd like to add to the invocation of `meteor build`, for example `--debug` or `--allow-incompatible-update`.
 
 ## Extras
 

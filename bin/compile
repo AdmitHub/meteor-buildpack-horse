@@ -31,10 +31,16 @@ if [ -n "${BUILDPACK_VERBOSE+1}" ]; then
   set -x
 fi
 
+
 # Get the path to dir one above this file.
 BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
 # Get the directory our app is checked out in (the "BUILD_DIR"), passed by Heroku
 APP_CHECKOUT_DIR=$1
+CACHE_DIR=$2
+if [ -n "${BUILDPACK_CLEAR_CACHE+1}" ]; then
+  echo "----> Clearing cache dir."
+  rm -rf "$CACHE_DIR"
+fi
 
 #
 # Find the meteor app ($APP_SOURCE_DIR).
@@ -54,12 +60,14 @@ if [ ! -d "$APP_SOURCE_DIR/.meteor" ] && [ -d "$APP_SOURCE_DIR/app/.meteor" ]; t
   APP_SOURCE_DIR="$APP_SOURCE_DIR/app/"
 fi
 if [ ! -d "$APP_SOURCE_DIR/.meteor" ]; then
-  echo "FATAL: Can't find meteor app. Set METEOR_APP_DIR to the relative location of the meteor app within your repository if it's not in the root or 'app/' supdirectory.  (Tried ${APP_SOURCE_DIR})"
+  echo "FATAL: Can't find meteor app. Set METEOR_APP_DIR to the relative location of the meteor app within your repository if it's not in the root or 'app/' subdirectory.  (Tried ${APP_SOURCE_DIR})"
   exit 1
 fi
 
+APP_RELEASE=`cat "$APP_SOURCE_DIR/.meteor/release" | sed -e 's/METEOR@//'`
+
 # Where we will install meteor. Has to be outside the APP_CHECKOUT_DIR.
-METEOR_DIR=`mktemp -d "$BUILDPACK_DIR"/meteor-XXXX`
+METEOR_DIR="$CACHE_DIR/$APP_RELEASE"
 # Where we'll put things we compile.
 COMPILE_DIR_SUFFIX=".meteor/heroku_build"
 COMPILE_DIR="$APP_CHECKOUT_DIR"/"$COMPILE_DIR_SUFFIX"
@@ -69,10 +77,8 @@ if [ -z "$BUILDPACK_VERBOSE" ]; then
 fi
 
 # Create directories as needed.
-mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR" "$COMPILE_DIR"
-
-# Update the path so we get npm, etc.
-PATH="$METEOR_DIR/.meteor:$COMPILE_DIR/bin:$PATH"
+mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR"
+mkdir -p "$COMPILE_DIR" "$COMPILE_DIR/bin" "$COMPILE_DIR/lib"
 
 # Set a default ROOT_URL if one is not defined. Currently, HEROKU_APP_NAME is
 # only available if you enable the labs addon "Heroku Dyno Metadata":
@@ -88,41 +94,21 @@ if [ -z "$ROOT_URL" ] ; then
 fi
 
 #
-# Install node
-#
-echo "-----> Installing node"
-NODE_VERSION=`curl -sS --get https://semver.io/node/resolve/0.10.x`
-NODE_URL="http://s3pository.heroku.com/node/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz"
-curl -sS $NODE_URL -o - | tar -zxf - -C $COMPILE_DIR --strip 1
-# Export some environment variables for npm to use when compiling stuff.
-export npm_config_prefix="$COMPILE_DIR"
-export CPATH="$COMPILE_DIR"/include
-export CPPPATH="$CPATH"
-
-#
 # Install meteor
 #
-echo "-----> Installing meteor"
-curl -sS https://install.meteor.com | HOME="$METEOR_DIR" /bin/sh
+
+if [ ! -e "$METEOR_DIR/.meteor/meteor" ]; then
+  echo "-----> Installing meteor"
+  curl -sS "https://install.meteor.com/?release=$APP_RELEASE" | HOME="$METEOR_DIR" /bin/sh
+fi
 METEOR="$METEOR_DIR/.meteor/meteor" # The meteor binary.
 
-# Maybe update release. Upgrade only if needed because it's slow.
-CUR_RELEASE=`HOME=$METEOR_DIR $METEOR --version | sed -e 's/Meteor /METEOR@/'`
-APP_RELEASE=`cat "$APP_SOURCE_DIR/.meteor/release"`
-if test "$CUR_RELEASE" != "$APP_RELEASE" ; then
-  # Sort CUR_RELEASE and APP_RELEASE and find the oldest
-  OLDER_RELEASE=`echo "$CUR_RELEASE\n$APP_RELEASE" | sort --version-sort | head -n1`
-  if [ "$CUR_RELEASE" = "$OLDER_RELEASE" ]; then
-    echo "-----> Upgrading meteor to $APP_RELEASE"
-    HOME=$METEOR_DIR $METEOR update --release $APP_RELEASE
-  fi
-fi
+echo "-----> Meteor version: `HOME=$METEOR_DIR $METEOR --version`"
 
 #
 # Build the meteor app!
 #
-echo "-----> Bundling bundle"
-cd $APP_SOURCE_DIR
+cd "$APP_SOURCE_DIR"
 
 # Determine if we have --server-only flag capability. Allow non-zero return from grep.
 echo "-----> Checking if this meteor version supports --server-only"
@@ -142,10 +128,37 @@ if [ -z "$SERVER_ONLY_FLAG" ]; then
   echo "-----> Moving on."
 fi
 
+# Identify the npm/node to use. While we could use `meteor node` and `meteor
+# npm` to execute these directly, to use them in prod, we'd need to copy the
+# meteor world into the built slug, and that's too large (Issue #125).
+# Instead, search for the binaries within meteor, and copy them into our built
+# slug.
+
+METEOR_NPM=`find $METEOR_DIR -wholename "*/dev_bundle/bin/npm"`
+METEOR_NODE=`find $METEOR_DIR -wholename "*/dev_bundle/bin/node"`
+# Trim whitespace
+METEOR_NPM=`echo "$METEOR_NPM" | sed -e 's/[[:space:]]*$//'`
+METEOR_NODE=`echo "$METEOR_NODE" | sed -e 's/[[:space:]]*$//'`
+if [ -z "$METEOR_NPM" ] || [ -z "$METEOR_NODE" ] ; then
+  echo "FATAL: Can't find npm/node within meteor bundle. This is a bug. Please open an issue at https://github.com/AdmitHub/meteor-buildpack-horse.";
+  exit 1
+fi
+
+# Copy node into place for production.
+NODE="$COMPILE_DIR"/bin/node
+cp "$METEOR_NODE" "$NODE"
+chmod a+x "$NODE"
+
+# Add npm and node path so that 1.4's npm-rebuild.js will function.
+PATH="$METEOR_DIR/.meteor:`dirname $METEOR_NPM`:$COMPILE_DIR/bin:$PATH"
+
+echo "-----> Using node: `$NODE --version`"
+echo "----->    and npm: `$METEOR_NPM --version`"
+
 # If we use npm on root, run npm install.  Don't use `--production` here, as we
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
-  npm install
+  $METEOR_NPM install
 fi
 
 # Related to https://github.com/meteor/meteor/issues/2796 and 
@@ -160,18 +173,25 @@ if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then
   HOME=$METEOR_DIR timeout -s9 60 $METEOR --settings settings.json || true
 fi
 
-# Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR, or it will
-# recurse, trying to bundle up its own bundling.
+# Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR during
+# bundling, or it will recurse, trying to bundle up its own bundling.
+
+echo "-----> Building Meteor app with ROOT_URL: $ROOT_URL"
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
-echo "-----> Building Meteor with ROOT_URL: $ROOT_URL"
-HOME=$METEOR_DIR $METEOR build --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
+
+# The actual invocation of `meteor build`!
+HOME=$METEOR_DIR $METEOR build $BUILD_OPTIONS --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
+
+echo "-----> Moving built slug to $COMPILE_DIR/app"
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 rmdir $BUNDLE_DEST
 
 # Run npm install on the built slug; only for `--production` dependencies.
+echo "-----> Installing npm production dependencies on built slug"
 if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then
   cd "$COMPILE_DIR"/app/programs/server
-  npm install --production
+  $METEOR_NPM install --production
+  cd "$APP_SOURCE_DIR"
 fi
 
 #
