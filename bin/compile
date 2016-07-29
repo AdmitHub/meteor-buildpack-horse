@@ -180,7 +180,7 @@ echo "-----> Building Meteor app with ROOT_URL: $ROOT_URL"
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
 
 # The actual invocation of `meteor build`!
-HOME=$METEOR_DIR $METEOR build --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
+HOME=$METEOR_DIR $METEOR build $BUILD_OPTIONS --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
 
 echo "-----> Moving built slug to $COMPILE_DIR/app"
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
