@@ -70,3 +70,6 @@ outdated or broken, and it's really hard to keep them straight.
 So this one is the horse one.
 
 README image credit: wikicommons contributor [Arsdelicata](https://commons.wikimedia.org/wiki/User:Arsdelicata)
+
+<a href="https://zenhub.com"><img src="https://raw.githubusercontent.com/ZenHubIO/support/master/zenhub-badge.png"></a>
+
