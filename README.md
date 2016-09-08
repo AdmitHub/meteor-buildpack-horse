@@ -32,6 +32,8 @@ The following are some important environment variables for bundling and running 
  - `METEOR_APP_DIR`: The relative path to the root of your meteor app within your git repository (i.e. the path to the directory that contains `.meteor/`). The buildpack will look in the root of your repository and `app/` subdirectory; if you put your app anywhere else (like `src/`), define this variable to tell the buildpack where to look.
  - `BUILDPACK_PRELAUNCH_METEOR`: If your app uses packages that need to compile their assets on first run, you may need meteor to launch prior to bundling.  If this applies for you, define `BUILDPACK_PRELAUNCH_METEOR=1`. [Reference issue](https://github.com/meteor/meteor/issues/2606).
  - `BUILDPACK_VERBOSE`: Set `BUILDPACK_VERBOSE=1` to enable verbose bash debugging during slug compilation. Only takes effect after the environment variables have been loaded.
+ - `BUILDPACK_CLEAR_CACHE`: This buildpack stores the meteor installation in the [CACHE_DIR](https://devcenter.heroku.com/articles/buildpack-api#caching) to speed up subsequent builds. Set `BUILDPACK_CLEAR_CACHE=1` to clear this cache on startup.
+ - `BUILD_OPTIONS`: Set to any additional options you'd like to add to the invocation of `meteor build`, for example `--debug` or `--allow-incompatible-update`.
 
 ## Extras
 
@@ -55,6 +57,10 @@ subdirectories.  Those directories are added to `$PATH` and
 So `$COMPILE_DIR/bin` etc are great places to put any extra binaries or stuff
 if you need to in custom extras.
 
+## Tips & Tricks
+
+Please help us add tips and tricks to the [wiki](https://github.com/AdmitHub/meteor-buildpack-horse/wiki) for further help, like usage with Dokku or other environments.
+
 ## Why horse?
 
 There are a gazillian forks and branches of various buildpacks remixing the
@@ -64,3 +70,6 @@ outdated or broken, and it's really hard to keep them straight.
 So this one is the horse one.
 
 README image credit: wikicommons contributor [Arsdelicata](https://commons.wikimedia.org/wiki/User:Arsdelicata)
+
+<a href="https://zenhub.com"><img src="https://raw.githubusercontent.com/ZenHubIO/support/master/zenhub-badge.png"></a>
+
