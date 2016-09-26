@@ -97,7 +97,9 @@ fi
 
 # Install the latest meteor, and rely on meteor to upgrade/downgrade itself to
 # the .meteor/release target.
-if [ ! -e "$METEOR_DIR/.meteor/meteor" ]; then
+if [ -e "$METEOR_DIR/.meteor/meteor" ]; then
+  echo "-----> Existing meteor installation found, using it."
+else
   echo "-----> Installing meteor"
   curl -sS "https://install.meteor.com/" | HOME="$METEOR_DIR" /bin/sh
 fi
