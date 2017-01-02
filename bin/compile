@@ -176,10 +176,10 @@ PATH="$METEOR_DIR/.meteor:`dirname $METEOR_NPM`:$COMPILE_DIR/bin:$PATH"
 echo "-----> Using node: `$NODE --version`"
 echo "----->    and npm: `$METEOR_NPM --version`"
 
-# If we use npm on root, run npm install.  Don't use `--production` here, as we
-# may need devDependencies (e.g. webpack) in order to build the meteor app.
+# If we use npm on root, run npm install.  Don't use `--production` here, if we
+# need devDependencies (e.g. webpack) in order to build the meteor app.
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
-  $METEOR_NPM install
+  $METEOR_NPM install --production
 fi
 
 # Related to https://github.com/meteor/meteor/issues/2796 and
