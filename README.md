@@ -34,6 +34,7 @@ The following are some important environment variables for bundling and running 
  - `BUILDPACK_VERBOSE`: Set `BUILDPACK_VERBOSE=1` to enable verbose bash debugging during slug compilation. Only takes effect after the environment variables have been loaded.
  - `BUILDPACK_CLEAR_CACHE`: This buildpack stores the meteor installation in the [CACHE_DIR](https://devcenter.heroku.com/articles/buildpack-api#caching) to speed up subsequent builds. Set `BUILDPACK_CLEAR_CACHE=1` to clear this cache on startup and after build is done.
  - `BUILD_OPTIONS`: Set to any additional options you'd like to add to the invocation of `meteor build`, for example `--debug` or `--allow-incompatible-update`.
+ - `NODEJS_PARAMS`: additional parameters for running `node` binary. This can be used eg. for [adjusting garbage collector settings](https://devcenter.heroku.com/articles/node-best-practices#avoid-garbage) by putting `--optimize_for_size --max_old_space_size=460 --gc_interval=100` here
 
 ## Extras
 
