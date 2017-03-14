@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # If MONGO_URL is not specified, try the following in order:
 #
@@ -16,3 +16,5 @@ cat > "$APP_CHECKOUT_DIR"/.profile.d/mongo_url.sh <<EOF
     echo "meteor-buildpack-horse: MONGO_URL missing, you must define it for meteor to work."
   fi
 EOF
+# Execute script to echo error if MONGO_URL is undefined.
+/bin/bash "$APP_CHECKOUT_DIR"/.profile.d/mongo_url.sh
