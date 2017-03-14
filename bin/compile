@@ -38,8 +38,8 @@ BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
 APP_CHECKOUT_DIR=$1
 CACHE_DIR=$2
 if [ -n "${BUILDPACK_CLEAR_CACHE+1}" ]; then
-  echo "----> Clearing cache dir."
-  rm -rf "$CACHE_DIR"
+  echo "-----> Clearing cache dir."
+  rm -rf "$CACHE_DIR/*"
 fi
 
 #
@@ -174,7 +174,7 @@ if [ -e "$APP_SOURCE_DIR"/package.json ]; then
   $METEOR_NPM install
 fi
 
-# Related to https://github.com/meteor/meteor/issues/2796 and 
+# Related to https://github.com/meteor/meteor/issues/2796 and
 # https://github.com/meteor/meteor/issues/2606.  Some packages only build their
 # assets at runtime, and thus they are not available for bundling unless meteor
 # has been launched.  To opt-in to this, set BUILDPACK_PRELAUNCH_METEOR=1.
@@ -229,3 +229,11 @@ echo "-----> Running extras"
 for file in `ls "$BUILDPACK_DIR"/extra | sort`; do
   . "$BUILDPACK_DIR"/extra/$file
 done
+
+#
+# Clear cache after build is done
+#
+if [ -n "${BUILDPACK_CLEAR_CACHE+1}" ]; then
+  echo "-----> Clearing cache dir."
+  rm -rf $METEOR_DIR
+fi
