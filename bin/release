@@ -3,4 +3,5 @@
 cat <<EOF
 default_process_types:
   web: .meteor/heroku_build/bin/node .meteor/heroku_build/app/main.js
+  web: node --optimize_for_size --max_old_space_size=460 --gc_interval=100 .meteor/heroku_build/app/main.js
 EOF
