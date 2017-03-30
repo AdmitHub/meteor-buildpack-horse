@@ -46,8 +46,8 @@ BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
 APP_CHECKOUT_DIR=$1
 CACHE_DIR=$2
 if [ -n "${BUILDPACK_CLEAR_CACHE+1}" ]; then
-  echo "----> Clearing cache dir."
-  rm -rf "$CACHE_DIR"
+  echo "-----> Clearing cache dir."
+  rm -rf "$CACHE_DIR/*"
 fi
 
 #
@@ -237,3 +237,11 @@ echo "-----> Running extras"
 for file in `ls "$BUILDPACK_DIR"/extra | sort`; do
   . "$BUILDPACK_DIR"/extra/$file
 done
+
+#
+# Clear cache after build is done
+#
+if [ -n "${BUILDPACK_CLEAR_CACHE+1}" ]; then
+  echo "-----> Clearing cache dir."
+  rm -rf $METEOR_DIR
+fi
