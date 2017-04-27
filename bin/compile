@@ -194,6 +194,17 @@ if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then
   HOME=$METEOR_DIR timeout -s9 60 $METEOR_DIR/.meteor/meteor --settings settings.json || true
 fi
 
+#
+# Before Bundling
+#
+
+# source scripts in 'before' dir, if any.  Create them for custom stuff like
+# binary dependencies, additional environment settings, etc.
+echo "-----> Running before bundling"
+for file in `ls "$BUILDPACK_DIR"/before | sort`; do
+  . "$BUILDPACK_DIR"/before/$file
+done
+
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR during
 # bundling, or it will recurse, trying to bundle up its own bundling.
 
