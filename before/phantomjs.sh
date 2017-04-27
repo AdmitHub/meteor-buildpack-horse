@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PHANTOM_VERSION=1.9.20
+PHANTOM_VERSION=1.9.8
 PHANTOM_URL="https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-$PHANTOM_VERSION-linux-x86_64.tar.bz2"
 
 echo "-----> Installing phantomjs."
