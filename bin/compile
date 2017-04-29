@@ -186,6 +186,17 @@ if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then
   HOME=$METEOR_DIR timeout -s9 60 $METEOR_DIR/.meteor/meteor --settings settings.json || true
 fi
 
+echo "-----> Gulp: building app to language: $GULP_LANG"
+cd ../gulp && npm install
+node_modules/.bin/gulp build --lang="$GULP_LANG"
+cd "$APP_SOURCE_DIR"
+
+echo "-----> Cloning custom Meteor packages into packages directory"
+git clone https://github.com/jirikrepl/avatar.git packages/avatar
+git clone https://github.com/jirikrepl/bootstrap.git packages/bootstrap
+git clone https://github.com/jirikrepl/core.git packages/core
+git clone https://github.com/jirikrepl/meteor-accounts-t9n.git packages/meteor-accounts-t9n
+
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR during
 # bundling, or it will recurse, trying to bundle up its own bundling.
 
