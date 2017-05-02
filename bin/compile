@@ -82,8 +82,6 @@ if [ -z "$BUILDPACK_VERBOSE" ]; then
   METEOR_PRETTY_OUTPUT=0
 fi
 
-export NODE_ENV=production
-
 # Create directories as needed.
 mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR"
 mkdir -p "$COMPILE_DIR" "$COMPILE_DIR/bin" "$COMPILE_DIR/lib"
@@ -212,6 +210,9 @@ done
 
 echo "-----> Building Meteor app with ROOT_URL: $ROOT_URL"
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
+
+echo "-------> Set NODE_ENV environment variable to 'production'"
+export NODE_ENV=production
 
 # The actual invocation of `meteor build`!
 METEOR build $BUILD_OPTIONS --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
