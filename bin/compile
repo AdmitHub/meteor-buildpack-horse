@@ -182,6 +182,13 @@ if [ -e "$APP_SOURCE_DIR"/package.json ]; then
   $METEOR_NPM install --production
 fi
 
+# Temporary fix for https://github.com/RocketChat/Rocket.Chat/issues/6444
+# Try to add an existing package and let it fail, but the build command will work ¯\_(ツ)_/¯
+# Allow non-zero return since we know it will fail
+set +e
+METEOR add rocketchat:lib
+set -e
+
 # Related to https://github.com/meteor/meteor/issues/2796 and
 # https://github.com/meteor/meteor/issues/2606.  Some packages only build their
 # assets at runtime, and thus they are not available for bundling unless meteor
