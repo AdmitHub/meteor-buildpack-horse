@@ -171,7 +171,7 @@ echo "----->    and npm: `$METEOR_NPM --version`"
 # If we use npm on root, run npm install.  Don't use `--production` here, as we
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
-  $METEOR_NPM install
+  NODE_ENV=development $METEOR_NPM install
 fi
 
 # Related to https://github.com/meteor/meteor/issues/2796 and
