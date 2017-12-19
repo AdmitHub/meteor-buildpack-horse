@@ -152,10 +152,6 @@ METEOR_NODE=`METEOR node -e "process.stdout.write(process.execPath)"`
 # Assume npm is in the same dir as node.
 METEOR_NPM="`dirname "$METEOR_NODE"`/npm"
 
-# install yarn
-touch $HOME/.bashrc
-curl -o- -L https://yarnpkg.com/install.sh | bash
-
 if [ -z "$METEOR_NPM" ] || [ -z "$METEOR_NODE" ] ; then
   echo "FATAL: Can't find npm/node within meteor bundle. This is a bug. Please open an issue at https://github.com/AdmitHub/meteor-buildpack-horse.";
   exit 1
@@ -168,6 +164,11 @@ chmod a+x "$NODE"
 
 # Add npm and node path so that 1.4's npm-rebuild.js will function.
 PATH="$METEOR_DIR/.meteor:`dirname $METEOR_NPM`:$COMPILE_DIR/bin:$PATH"
+
+# install yarn
+touch $HOME/.bashrc
+echo 'export PATH="$HOME/.yarn/bin:$PATH"' >> $HOME/.bashrc
+curl -o- -L https://yarnpkg.com/install.sh | bash
 
 echo "-----> Using node: `$NODE --version`"
 echo "----->    and npm: `$METEOR_NPM --version`"
