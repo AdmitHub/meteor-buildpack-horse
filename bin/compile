@@ -167,8 +167,8 @@ PATH="$METEOR_DIR/.meteor:`dirname $METEOR_NPM`:$COMPILE_DIR/bin:$PATH"
 
 # install yarn
 touch $HOME/.bashrc
-echo 'export PATH="$HOME/.yarn/bin:$PATH"' >> $HOME/.bashrc
 curl -o- -L https://yarnpkg.com/install.sh | bash
+export PATH="$HOME/.yarn/bin:$PATH"
 
 echo "-----> Using node: `$NODE --version`"
 echo "----->    and npm: `$METEOR_NPM --version`"
