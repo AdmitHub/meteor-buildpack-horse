@@ -37,7 +37,7 @@ BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
 # Get the directory our app is checked out in (the "BUILD_DIR"), passed by Heroku
 APP_CHECKOUT_DIR=$1
 CACHE_DIR=$2
-if [ -n "${BUILDPACK_CLEAR_CACHE+1}" ]; then
+if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
   echo "-----> Clearing cache dir."
   rm -rf "$CACHE_DIR/*"
 fi
@@ -233,7 +233,7 @@ done
 #
 # Clear cache after build is done
 #
-if [ -n "${BUILDPACK_CLEAR_CACHE+1}" ]; then
+if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
   echo "-----> Clearing cache dir."
   rm -rf $METEOR_DIR
 fi
