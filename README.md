@@ -1,4 +1,4 @@
-# Meteor Buildpack Horse
+# Meteor Buildpack Horsee
 
 [![Horse](https://i.imgur.com/YhIL9zM.jpg)](https://commons.wikimedia.org/wiki/File:Draw-Costa_Rican-2smallest.jpg)
 
