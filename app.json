@@ -1,0 +1,15 @@
+{
+  "name": "meteor-buildpack-horse",
+  "scripts": {
+  },
+  "env": {
+  },
+  "formation": {
+  },
+  "addons": [
+
+  ],
+  "buildpacks": [
+
+  ]
+}
