@@ -171,6 +171,8 @@ echo "----->    and npm: `$METEOR_NPM --version`"
 # If we use npm on root, run npm install.  Don't use `--production` here, as we
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
+  mkdir -p $CACHE_DIR/dev-modules
+  mv $CACHE_DIR/dev-modules $APP_SOURCE_DIR/node_modules
   $METEOR_NPM install
 fi
 
@@ -193,7 +195,11 @@ echo "-----> Building Meteor app with ROOT_URL: $ROOT_URL"
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
 
 # The actual invocation of `meteor build`!
+mkdir -p $CACHE_DIR/build
+mv $CACHE_DIR/build "$APP_SOURCE_DIR"/.meteor/local
 METEOR build $BUILD_OPTIONS --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
+mv "$APP_SOURCE_DIR"/.meteor/local $CACHE_DIR/build
+mv $APP_SOURCE_DIR/node_modules $CACHE_DIR/dev-modules
 
 echo "-----> Moving built slug to $COMPILE_DIR/app"
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
@@ -203,7 +209,10 @@ rmdir $BUNDLE_DEST
 echo "-----> Installing npm production dependencies on built slug"
 if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then
   cd "$COMPILE_DIR"/app/programs/server
+  mkdir -p $CACHE_DIR/prod-modules
+  mv $CACHE_DIR/prod-modules "$COMPILE_DIR"/app/programs/server/node_modules
   $METEOR_NPM install --production
+  mv "$COMPILE_DIR"/app/programs/server/node_modules $CACHE_DIR/prod-modules
   cd "$APP_SOURCE_DIR"
 fi
 
