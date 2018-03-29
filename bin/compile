@@ -31,6 +31,8 @@ if [ -n "${BUILDPACK_VERBOSE+1}" ]; then
   set -x
 fi
 
+# Save the start time to calculate execution time
+START=$(date +%s)
 
 # Get the path to dir one above this file.
 BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
@@ -237,3 +239,9 @@ if [ -n "${BUILDPACK_CLEAR_CACHE+1}" ]; then
   echo "-----> Clearing cache dir."
   rm -rf $METEOR_DIR
 fi
+
+# Calculate execution time
+END=$(date +%s)
+DIFF=$(($END - $START))
+# This date call doesn't work on macOS. Using BSD, it would be $(date -r $DIFF -u +%H:%M:%S)
+echo "-----> Build duration: $(date -d@$DIFF -u +%H:%M:%S)"
