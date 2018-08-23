@@ -7,9 +7,9 @@ A heroku buildpack for Meteor v1+, designed to be as simple and readable as poss
 To use this with your meteor app and heroku:
 
 1. Set up your app to [deploy to heroku with git](https://devcenter.heroku.com/articles/git).
-2. Set this repository as the buildpack URL:
+2. Set your buildpack to the latest version from the [registry](https://devcenter.heroku.com/articles/buildpack-registry):
 
-        heroku buildpacks:set https://github.com/AdmitHub/meteor-buildpack-horse.git
+        heroku buildpacks:set admithub/meteor-horse
 
 3. Add the MongoLab addon:
 
@@ -57,6 +57,12 @@ subdirectories.  Those directories are added to `$PATH` and
 
 So `$COMPILE_DIR/bin` etc are great places to put any extra binaries or stuff
 if you need to in custom extras.
+
+## Using the latest buildpack code
+
+The `admithub/meteor-horse` buildpack from the [Heroku Registry](https://devcenter.heroku.com/articles/buildpack-registry) contains the latest stable version of the buildpack. If you'd like to use the latest buildpack code from this Github repository, you can set your buildpack to the Github URL:
+
+        heroku buildpacks:set https://github.com/AdmitHub/meteor-buildpack-horse
 
 ## Tips & Tricks
 
