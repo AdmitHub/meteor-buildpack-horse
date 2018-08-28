@@ -27,7 +27,7 @@ export_env_dir $3
 
 # Enable verbose debugging if configured to -- though this has to come after
 # we've loaded environment configs.
-if [ -n "${BUILDPACK_VERBOSE+1}" ]; then
+if [ -n "$BUILDPACK_VERBOSE" ]; then
   set -x
 fi
 
@@ -37,7 +37,7 @@ BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
 # Get the directory our app is checked out in (the "BUILD_DIR"), passed by Heroku
 APP_CHECKOUT_DIR=$1
 CACHE_DIR=$2
-if [ -n "${BUILDPACK_CLEAR_CACHE+1}" ]; then
+if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
   echo "-----> Clearing cache dir."
   rm -rf "$CACHE_DIR/*"
 fi
@@ -178,7 +178,7 @@ fi
 # https://github.com/meteor/meteor/issues/2606.  Some packages only build their
 # assets at runtime, and thus they are not available for bundling unless meteor
 # has been launched.  To opt-in to this, set BUILDPACK_PRELAUNCH_METEOR=1.
-if [ -n "${BUILDPACK_PRELAUNCH_METEOR+1}" ]; then
+if [ -n "$BUILDPACK_PRELAUNCH_METEOR" ]; then
   echo "-----> BUILDPACK_PRELAUNCH_METEOR: Pre-launching meteor to build packages assets"
   # Remove the Android platform because it fails due to the Android tools not
   # being installed, but leave the iOS platform because it's ignored.
@@ -233,7 +233,7 @@ done
 #
 # Clear cache after build is done
 #
-if [ -n "${BUILDPACK_CLEAR_CACHE+1}" ]; then
+if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
   echo "-----> Clearing cache dir."
   rm -rf $METEOR_DIR
 fi
