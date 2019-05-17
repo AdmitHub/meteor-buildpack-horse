@@ -165,13 +165,19 @@ chmod a+x "$NODE"
 # Add npm and node path so that 1.4's npm-rebuild.js will function.
 PATH="$METEOR_DIR/.meteor:`dirname $METEOR_NPM`:$COMPILE_DIR/bin:$PATH"
 
+# install yarn
+touch $HOME/.bashrc
+curl -o- -L https://yarnpkg.com/install.sh | bash
+export PATH="$HOME/.yarn/bin:$PATH"
+
 echo "-----> Using node: `$NODE --version`"
 echo "----->    and npm: `$METEOR_NPM --version`"
+echo "----->    and yarn: `yarn --version`"
 
 # If we use npm on root, run npm install.  Don't use `--production` here, as we
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
-  $METEOR_NPM install
+  yarn install
 fi
 
 # Related to https://github.com/meteor/meteor/issues/2796 and
@@ -203,7 +209,7 @@ rmdir $BUNDLE_DEST
 echo "-----> Installing npm production dependencies on built slug"
 if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then
   cd "$COMPILE_DIR"/app/programs/server
-  $METEOR_NPM install --production
+  yarn install --production
   cd "$APP_SOURCE_DIR"
 fi
 
