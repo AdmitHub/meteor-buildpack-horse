@@ -199,13 +199,6 @@ echo "-----> Moving built slug to $COMPILE_DIR/app"
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 rmdir $BUNDLE_DEST
 
-# Run npm install on the built slug; only for '--production' dependencies.
-echo "-----> Installing npm production dependencies on built slug"
-if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then
-  cd "$COMPILE_DIR"/app/programs/server
-  $METEOR_NPM install --production
-  cd "$APP_SOURCE_DIR"
-fi
 
 #
 # Environment
