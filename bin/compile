@@ -169,8 +169,7 @@ echo "-----> Using node: `$NODE --version`"
 echo "----->    and npm: `$METEOR_NPM --version`"
 
 # Run prebuild step
-ls
-cat README.md
+cat package.json
 $METEOR_NPM run heroku-prebuild
 
 
