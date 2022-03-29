@@ -170,7 +170,7 @@ echo "----->    and npm: `$METEOR_NPM --version`"
 
 # Run prebuild step
 ls
-cp $APP_SOURCE_DIR
+cat README.md
 $METEOR_NPM run heroku-prebuild
 
 
