@@ -169,8 +169,6 @@ echo "-----> Using node: `$NODE --version`"
 echo "----->    and npm: `$METEOR_NPM --version`"
 
 # Run prebuild step
-echo "Should install to"
-echo $APP_SOURCE_DIR
 ls $APP_SOURCE_DIR
 if [ -e "$APP_SOURCE_DIR"/heroku-preinstall.sh ]; then
   echo "Starting pre-install"
@@ -181,7 +179,7 @@ fi
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
 echo "Installing npm packages"
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
-  $METEOR_NPM install --loglevel verbose
+  $METEOR_NPM install
 fi
 
 # Related to https://github.com/meteor/meteor/issues/2796 and
