@@ -169,9 +169,7 @@ echo "-----> Using node: `$NODE --version`"
 echo "----->    and npm: `$METEOR_NPM --version`"
 
 # Run prebuild step
-ls $APP_SOURCE_DIR
 if [ -e "$APP_SOURCE_DIR"/heroku-preinstall.sh ]; then
-  echo "Starting pre-install"
   "$APP_SOURCE_DIR"/heroku-preinstall.sh
 fi
 
