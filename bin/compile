@@ -168,8 +168,14 @@ PATH="$METEOR_DIR/.meteor:`dirname $METEOR_NPM`:$COMPILE_DIR/bin:$PATH"
 echo "-----> Using node: `$NODE --version`"
 echo "----->    and npm: `$METEOR_NPM --version`"
 
+# Run prebuild step
+if [ -e "$APP_SOURCE_DIR"/heroku-preinstall.sh ]; then
+  "$APP_SOURCE_DIR"/heroku-preinstall.sh
+fi
+
 # If we use npm on root, run npm install.  Don't use `--production` here, as we
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
+echo "Installing npm packages"
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
   $METEOR_NPM install
 fi
@@ -238,4 +244,9 @@ rm -rf "$APP_SOURCE_DIR"/node_modules
 if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
   echo "-----> Clearing cache dir."
   rm -rf $METEOR_DIR
+fi
+
+# Run cleanup
+if [ -e "$APP_SOURCE_DIR"/heroku-postinstall.sh]; then
+  "$APP_SOURCE_DIR"/heroku-postinstall.sh
 fi
