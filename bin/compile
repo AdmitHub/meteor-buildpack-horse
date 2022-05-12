@@ -244,9 +244,9 @@ if [ -e "$APP_SOURCE_DIR"/heroku-preinstall.sh ]; then
   "$APP_SOURCE_DIR"/heroku-preinstall.sh
 fi
 
-#if [ -e $CACHE_DIR/node_module ]; then
-#  cp -r $CACHE_DIR/node_modules "$APP_SOURCE_DIR"/node_modules
-#fi
+if [ -e $CACHE_DIR/node_module ]; then
+  cp -r $CACHE_DIR/node_modules "$APP_SOURCE_DIR"/node_modules
+fi
 
 
 # If we use npm on root, run npm install.  Don't use `--production` here, as we
@@ -256,7 +256,7 @@ if [ -e "$APP_SOURCE_DIR"/package.json ]; then
   $METEOR_NPM install
 fi
 
-#cp -r "$APP_SOURCE_DIR"/node_modules $CACHE_DIR/node_modules
+cp -r "$APP_SOURCE_DIR"/node_modules $CACHE_DIR/node_modules
 
 # Related to https://github.com/meteor/meteor/issues/2796 and
 # https://github.com/meteor/meteor/issues/2606.  Some packages only build their
@@ -322,6 +322,7 @@ rm -rf "$APP_SOURCE_DIR"/node_modules
 if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
   echo "-----> Clearing cache dir."
   rm -rf $METEOR_DIR
+  rm -rf $CACHE_DIR/*
 fi
 
 # Run cleanup
