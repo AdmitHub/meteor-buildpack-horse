@@ -130,8 +130,6 @@ if [ ! -d "$APP_SOURCE_DIR/.meteor" ]; then
   exit 1
 fi
 
-
-
 # Where we will install meteor. Has to be outside the APP_CHECKOUT_DIR.
 METEOR_DIR="$CACHE_DIR/meteor"
 # Where we'll put things we compile.
@@ -226,10 +224,6 @@ if [ -z "$METEOR_NPM" ] || [ -z "$METEOR_NODE" ] ; then
   exit 1
 fi
 
-# the metrics plugin requires the same path like in the heroku nodejs buildpack: https://github.com/heroku/heroku-nodejs-plugin/blob/ee2c7e1a16809d965f49dba533861d01180ffe46/src/index.js#L9
-mkdir -p "$APP_CHECKOUT_DIR"/.heroku/node/bin
-NODE="$APP_CHECKOUT_DIR"/.heroku/node/bin/node
-
 # Copy node into place for production.
 NODE="$COMPILE_DIR"/bin/node
 cp "$METEOR_NODE" "$NODE"
@@ -252,14 +246,7 @@ fi
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
 echo "Installing npm packages"
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
-  mkdir -p "$CACHE_DIR/meteor-dev-modules"
-  if [ -n "$(ls -A $CACHE_DIR/meteor-dev-modules)" ]; then
-    echo "-----> Reusing development node_modules cache"
-    mkdir -p "$APP_SOURCE_DIR/node_modules"
-    mv "$CACHE_DIR/meteor-dev-modules/*" "$APP_SOURCE_DIR/node_modules"
-  fi
   $METEOR_NPM install
-  cp -a "$APP_SOURCE_DIR/node_modules/*" "$CACHE_DIR/meteor-dev-modules/"
 fi
 
 # Related to https://github.com/meteor/meteor/issues/2796 and
@@ -281,12 +268,6 @@ echo "-----> Building Meteor app with ROOT_URL: $ROOT_URL"
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
 
 # The actual invocation of `meteor build`!
-mkdir -p "$CACHE_DIR/meteor-build"
-rm -rf "$APP_SOURCE_DIR"/.meteor/local
-if [ -n "$(ls -A $CACHE_DIR/meteor-build)" ]; then
-  echo "-----> Reusing meteor build cache"
-fi
-ln -s "$CACHE_DIR/meteor-build" "$APP_SOURCE_DIR/.meteor/local"
 METEOR build $BUILD_OPTIONS --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
 
 echo "-----> Moving built slug to $COMPILE_DIR/app"
@@ -297,14 +278,7 @@ rmdir $BUNDLE_DEST
 echo "-----> Installing npm production dependencies on built slug"	
 if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then	
   cd "$COMPILE_DIR"/app/programs/server	
-  mkdir -p "$CACHE_DIR/meteor-prod-modules"
-  if [ -n "$(ls -A $CACHE_DIR/meteor-prod-modules)" ]; then
-    echo "-----> Reusing production node_modules cache"
-  fi
-  mv "$CACHE_DIR/meteor-prod-modules/*" "$COMPILE_DIR/app/programs/server/node_modules" &> /dev/null || true
-  rm -rf "$CACHE_DIR/meteor-prod-modules"
-  $METEOR_NPM install --production
-  cp -R "$COMPILE_DIR/app/programs/server/node_modules" "$CACHE_DIR/meteor-prod-modules"
+  $METEOR_NPM install --production	
   cd "$APP_SOURCE_DIR"	
 fi	
 
@@ -339,7 +313,6 @@ rm -rf "$APP_SOURCE_DIR"/node_modules
 if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
   echo "-----> Clearing cache dir."
   rm -rf $METEOR_DIR
-  rm -rf "$CACHE_DIR/*"
 fi
 
 # Run cleanup
