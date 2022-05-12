@@ -144,6 +144,8 @@ fi
 mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR"
 mkdir -p "$COMPILE_DIR" "$COMPILE_DIR/bin" "$COMPILE_DIR/lib"
 
+cp "$BUILDPACK_DIR/lib/start.sh" "$COMPILE_DIR/start.sh"
+
 # Set a default ROOT_URL if one is not defined. Currently, HEROKU_APP_NAME is
 # only available if you enable the labs addon "Heroku Dyno Metadata":
 # https://devcenter.heroku.com/articles/dyno-metadata
