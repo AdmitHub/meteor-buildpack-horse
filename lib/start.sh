@@ -16,4 +16,4 @@ if [[ -n "$HEROKU_METRICS_URL" ]] && [[ "${DYNO}" != run\.* ]] && [[ -z "$HEROKU
 fi
 
 echo "RUNNING with" $NODEJS_PARAMS
- $HOME/.meteor/heroku_build/node/bin/node $NODEJS_PARAMS .meteor/heroku_build/app/main.js
+ $HOME/.meteor/heroku_build/bin/node $NODEJS_PARAMS .meteor/heroku_build/app/main.js
