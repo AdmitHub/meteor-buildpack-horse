@@ -326,7 +326,7 @@ if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
 fi
 
 #Node metrics needs node to be in a specific place
-mkdir $APP_CHECKOUT_DIR/.heroku/node/bin
+mkdir -p $APP_CHECKOUT_DIR/.heroku/node/bin
 cp $APP_CHECKOUT_DIR/.meteor/heroku_build/bin/node  $APP_CHECKOUT_DIR/.heroku/node/bin
 
 
