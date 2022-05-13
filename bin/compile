@@ -325,6 +325,11 @@ if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
   rm -rf $CACHE_DIR/*
 fi
 
+#Node metrics needs node to be in a specific place
+mkdir $APP_CHECKOUT_DIR/.heroku/node/bin
+cp $APP_CHECKOUT_DIR/.meteor/heroku_build/bin/node  $APP_CHECKOUT_DIR/.heroku/node/bin
+
+
 # Run cleanup
 if [ -e "$APP_SOURCE_DIR"/heroku-postinstall.sh]; then
   "$APP_SOURCE_DIR"/heroku-postinstall.sh
