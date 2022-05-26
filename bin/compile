@@ -9,6 +9,72 @@ set -e
 # debug verbosely.
 #set -x
 
+get_node_major_version() {
+  local node_version=`METEOR node --version`
+  # major_string will be ex: "6." "8." "10"
+  local major_string=${node_version:1:2}
+  # strip any "."s from major_string
+  local major=${major_string//.}
+  echo $major
+}
+get_latest_release() {
+    # Get latest release tag from GitHub api
+    curl --silent --write-out "%{http_code}" "https://api.github.com/repos/heroku/heroku-nodejs-plugin/releases/latest" |
+        grep '"tag_name":' |
+        sed -E 's/.*"([^"]+)".*/\1/'
+}
+test_hash() {
+    local major=${1}
+    local dir=${2}
+
+    local downloaded_sha=$(cat $dir/heroku-nodejs-plugin-node-$major.sha512 | awk '{print substr($0,0,128)}')
+    local binary_sha=$(shasum -a 512 $dir/heroku-nodejs-plugin-node-$major.tar.gz | awk '{print substr($0,0,128)}')
+
+    if [[ "$downloaded_sha" != "$binary_sha" ]]; then
+        echo "Invalid SHA for file: $dir/heroku-nodejs-plugin-node-$major.tar.gz"
+        exit 1
+    else
+        echo "Verified SHA for file: $dir/heroku-nodejs-plugin-node-$major.tar.gz"
+    fi
+}
+download() {
+    local url=${1}
+    local file=${2}
+    local code=$(curl "$url" -L --fail --retry 5 --retry-max-time 15 -o "${file}" --write-out "%{http_code}")
+    if [[ "$code" != "200" ]]; then
+        echo "Unable to download from url: $url http code: $code"
+        exit 1
+    fi
+}
+download_assets_for_release() {
+    local tag=${1}
+    local dir=${2}
+    local version=${3}
+
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-$version-$tag.sha512" "$dir/heroku-nodejs-plugin-node-$version.sha512"
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-$version-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-$version.tar.gz"
+    test_hash $version $dir
+}
+download_plugin() {
+  local tag_name=$(get_latest_release)
+  download_assets_for_release $tag_name $1 $2
+}
+install_plugin() {
+  local bp_dir="$1"
+  local build_dir="$2"
+  local major=$(get_node_major_version)
+  mkdir -p "${bp_dir}/plugin"
+  download_plugin "${bp_dir}/plugin" $major
+  local plugin="${bp_dir}/plugin/heroku-nodejs-plugin-node-${major}.tar.gz"
+  # If we have a version of the plugin compiled for this version of node, and the
+  # user has not opted out of including the plugin, copy it into the slug.
+  # It will be included at runtime once the user opts into the Node metrics feature
+  if [[ -f "${plugin}" ]] && [[ -z "$HEROKU_SKIP_NODE_PLUGIN" ]]; then
+    mkdir -p "${build_dir}/.heroku/"
+    tar -xzf ${plugin} -C "${build_dir}/.heroku/"
+  fi
+}
+
 # Load config vars into environment (from https://devcenter.heroku.com/articles/buildpack-api)
 export_env_dir() {
   env_dir=$1
@@ -77,6 +143,8 @@ fi
 # Create directories as needed.
 mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR"
 mkdir -p "$COMPILE_DIR" "$COMPILE_DIR/bin" "$COMPILE_DIR/lib"
+
+cp "$BUILDPACK_DIR/lib/start.sh" "$COMPILE_DIR/start.sh"
 
 # Set a default ROOT_URL if one is not defined. Currently, HEROKU_APP_NAME is
 # only available if you enable the labs addon "Heroku Dyno Metadata":
@@ -149,6 +217,7 @@ fi
 # install.meteor.com is >=1.3, "meteor node" is available, even if the target
 # release predates that feature.
 METEOR_NODE=`METEOR node -e "process.stdout.write(process.execPath)"`
+METEOR_NODE_VERSION=`METEOR node --version | cut -d'v' -f 2`
 # Assume npm is in the same dir as node.
 METEOR_NPM="`dirname "$METEOR_NODE"`/npm"
 
@@ -162,6 +231,8 @@ NODE="$COMPILE_DIR"/bin/node
 cp "$METEOR_NODE" "$NODE"
 chmod a+x "$NODE"
 
+install_plugin "$BUILDPACK_DIR" "$COMPILE_DIR"
+
 # Add npm and node path so that 1.4's npm-rebuild.js will function.
 PATH="$METEOR_DIR/.meteor:`dirname $METEOR_NPM`:$COMPILE_DIR/bin:$PATH"
 
@@ -173,12 +244,15 @@ if [ -e "$APP_SOURCE_DIR"/heroku-preinstall.sh ]; then
   "$APP_SOURCE_DIR"/heroku-preinstall.sh
 fi
 
+
+
 # If we use npm on root, run npm install.  Don't use `--production` here, as we
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
 echo "Installing npm packages"
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
   $METEOR_NPM install
 fi
+
 
 # Related to https://github.com/meteor/meteor/issues/2796 and
 # https://github.com/meteor/meteor/issues/2606.  Some packages only build their
@@ -245,6 +319,11 @@ if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
   echo "-----> Clearing cache dir."
   rm -rf $METEOR_DIR
 fi
+
+#Node metrics needs node to be in a specific place
+mkdir -p $APP_CHECKOUT_DIR/.heroku/node/bin
+cp $APP_CHECKOUT_DIR/.meteor/heroku_build/bin/node  $APP_CHECKOUT_DIR/.heroku/node/bin
+
 
 # Run cleanup
 if [ -e "$APP_SOURCE_DIR"/heroku-postinstall.sh]; then
