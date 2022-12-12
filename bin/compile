@@ -250,8 +250,8 @@ fi
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
 echo "Installing npm packages"
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
-  echo "---> install  --omit=optional"
-  $METEOR_NPM install  --omit=optional
+  echo "---> install  --omit=optional --no-optional"
+  $METEOR_NPM install  --omit=optional --no-optional
 fi
 
 
@@ -284,7 +284,7 @@ rmdir $BUNDLE_DEST
 echo "-----> Installing npm production dependencies on built slug"	
 if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then	
   cd "$COMPILE_DIR"/app/programs/server	
-  $METEOR_NPM install --production	--omit=optional
+  $METEOR_NPM install --production	--omit=optional --no-optional
   cd "$APP_SOURCE_DIR"	
 fi	
 
