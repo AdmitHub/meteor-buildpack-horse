@@ -174,7 +174,7 @@ fi
 # Function to execute meteor with proper HOME.
 function METEOR {
   ARGS=$@
-  HOME="$METEOR_DIR" "$METEOR_DIR/.meteor/meteor" $ARGS
+  HOME="$METEOR_DIR" TOOL_NODE_FLAGS="--max-old-space-size=4096" "$METEOR_DIR/.meteor/meteor" $ARGS 
 }
 
 #
