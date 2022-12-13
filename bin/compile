@@ -327,6 +327,6 @@ cp $APP_CHECKOUT_DIR/.meteor/heroku_build/bin/node  $APP_CHECKOUT_DIR/.heroku/no
 
 
 # Run cleanup
-if [ -e "$APP_SOURCE_DIR"/heroku-postinstall.sh]; then
+if [ -e "$APP_SOURCE_DIR"/heroku-postinstall.sh ]; then
   "$APP_SOURCE_DIR"/heroku-postinstall.sh
 fi
