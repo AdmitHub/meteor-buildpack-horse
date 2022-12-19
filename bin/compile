@@ -3,11 +3,16 @@
 #
 # Heroku buildpack for Meteor
 #
+time
+buildpackTimeStart = $(date)
+echo "starting buildpack at $buildpackTimeStart"
+npxVersion = $(npx -v)
+echo "npx version  $npxVersion"
 
 # fail fast.
 set -e
 # debug verbosely.
-#set -x
+set -x
 
 # Load config vars into environment (from https://devcenter.heroku.com/articles/buildpack-api)
 export_env_dir() {
@@ -24,12 +29,6 @@ export_env_dir() {
 }
 
 export_env_dir $3
-
-# Enable verbose debugging if configured to -- though this has to come after
-# we've loaded environment configs.
-if [ -n "$BUILDPACK_VERBOSE" ]; then
-  set -x
-fi
 
 
 # Get the path to dir one above this file.
@@ -193,7 +192,15 @@ echo "-----> Building Meteor app with ROOT_URL: $ROOT_URL"
 BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
 
 # The actual invocation of `meteor build`!
-METEOR build $BUILD_OPTIONS --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
+PLATFORMS="web.browser"
+
+echo "build options: $BUILD_OPTIONS"
+echo "root url: $ROOT_URL"
+echo "server only flag: $SERVER_ONLY_FLAG"
+echo "bundle dest: $BUNDLE_DEST"
+echo "platforms: $PLATFORMS"
+
+METEOR build $BUILD_OPTIONS --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST --platforms $PLATFORMS
 
 echo "-----> Moving built slug to $COMPILE_DIR/app"
 mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
@@ -237,3 +244,5 @@ if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
   echo "-----> Clearing cache dir."
   rm -rf $METEOR_DIR
 fi
+
+
