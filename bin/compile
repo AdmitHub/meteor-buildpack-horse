@@ -174,7 +174,7 @@ fi
 # Function to execute meteor with proper HOME.
 function METEOR {
   ARGS=$@
-  HOME="$METEOR_DIR" "$METEOR_DIR/.meteor/meteor" $ARGS
+  HOME="$METEOR_DIR" TOOL_NODE_FLAGS="--max-old-space-size=4096" "$METEOR_DIR/.meteor/meteor" $ARGS 
 }
 
 #
@@ -250,7 +250,8 @@ fi
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
 echo "Installing npm packages"
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
-  $METEOR_NPM install
+  echo "---> install  --omit=optional --no-optional"
+  $METEOR_NPM install  --omit=optional --no-optional
 fi
 
 
@@ -283,7 +284,7 @@ rmdir $BUNDLE_DEST
 echo "-----> Installing npm production dependencies on built slug"	
 if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then	
   cd "$COMPILE_DIR"/app/programs/server	
-  $METEOR_NPM install --production	
+  $METEOR_NPM install --production	--omit=optional --no-optional
   cd "$APP_SOURCE_DIR"	
 fi	
 
@@ -326,6 +327,6 @@ cp $APP_CHECKOUT_DIR/.meteor/heroku_build/bin/node  $APP_CHECKOUT_DIR/.heroku/no
 
 
 # Run cleanup
-if [ -e "$APP_SOURCE_DIR"/heroku-postinstall.sh]; then
+if [ -e "$APP_SOURCE_DIR"/heroku-postinstall.sh ]; then
   "$APP_SOURCE_DIR"/heroku-postinstall.sh
 fi
