@@ -200,7 +200,6 @@ echo "server only flag: $SERVER_ONLY_FLAG"
 echo "bundle dest: $BUNDLE_DEST"
 echo "platforms: $PLATFORMS"
 
-export METEOR_PROFILE=1
 METEOR build $BUILD_OPTIONS --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST --platforms $PLATFORMS
 
 echo "-----> Moving built slug to $COMPILE_DIR/app"
