@@ -1,5 +1,7 @@
 # Meteor Buildpack Horse
 
+Note: https://buildpack-registry.s3.amazonaws.com/buildpacks/admithub/meteor-horse.tgz was used by Jakoa previously
+
 [![Horse](https://i.imgur.com/YhIL9zM.jpg)](https://commons.wikimedia.org/wiki/File:Draw-Costa_Rican-2smallest.jpg)
 
 A heroku buildpack for Meteor v1+, designed to be as simple and readable as possible.
