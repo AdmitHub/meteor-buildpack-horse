@@ -3,16 +3,11 @@
 #
 # Heroku buildpack for Meteor
 #
-time
-buildpackTimeStart = $(date)
-echo "starting buildpack at $buildpackTimeStart"
-npxVersion = $(npx -v)
-echo "npx version  $npxVersion"
 
 # fail fast.
 set -e
 # debug verbosely.
-set -x
+#set -x
 
 # Load config vars into environment (from https://devcenter.heroku.com/articles/buildpack-api)
 export_env_dir() {
