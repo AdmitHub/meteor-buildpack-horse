@@ -4,6 +4,25 @@
 # Heroku buildpack for Meteor
 #
 
+function invalidate_cache_if_needed() {
+  PACKAGE_JSON_HASH=$(sha256sum "$APP_SOURCE_DIR/package.json" | awk '{ print $1 }')
+  CACHE_HASH_FILE="$CACHE_DIR/package.json.hash"
+
+  if [ -f "$CACHE_HASH_FILE" ]; then
+    STORED_HASH=$(cat "$CACHE_HASH_FILE")
+    if [ "$PACKAGE_JSON_HASH" != "$STORED_HASH" ]; then
+      echo "-----> Detected changes in package.json, invalidating node_modules cache"
+      rm -rf "$CACHE_DIR/node_modules"
+    fi
+  else
+    echo "-----> No previous package.json hash found, invalidating node_modules cache"
+    rm -rf "$CACHE_DIR/node_modules"
+  fi
+
+  echo "$PACKAGE_JSON_HASH" > "$CACHE_HASH_FILE"
+}
+
+
 # fail fast.
 set -e
 # debug verbosely.
@@ -119,13 +138,8 @@ echo "-----> Target Meteor version: `METEOR --version`"
 echo "-----> Checking if this meteor version supports --server-only"
 # Allow non-zero return from grep.
 set +e
-HAS_SERVER_ONLY=`METEOR help build | grep -e '--server-only'`
 set -e
-if [ -n "$HAS_SERVER_ONLY" ] ; then
   SERVER_ONLY_FLAG='--server-only'
-else
-  SERVER_ONLY_FLAG=""
-fi
 # Remove the Android platform if we don't support the --server-only flag
 # (Meteor 1.2 and below).  iOS platform gets ignored properly.
 if [ -z "$SERVER_ONLY_FLAG" ]; then
@@ -165,7 +179,21 @@ echo "----->    and npm: `$METEOR_NPM --version`"
 # If we use npm on root, run npm install.  Don't use `--production` here, as we
 # may need devDependencies (e.g. webpack) in order to build the meteor app.
 if [ -e "$APP_SOURCE_DIR"/package.json ]; then
+  # Invalidate node_modules cache if needed
+  invalidate_cache_if_needed
+
+  # Restore node_modules from cache
+  if [ -d "$CACHE_DIR/node_modules" ]; then
+    echo "-----> Restoring node_modules directory from cache"
+    cp -r "$CACHE_DIR/node_modules" "$APP_SOURCE_DIR/"
+  fi
+
   $METEOR_NPM install --production
+
+  # Cache node_modules directory for faster builds
+  echo "-----> Caching node_modules directory for faster builds"
+  rm -rf "$CACHE_DIR/node_modules"
+  cp -r "$APP_SOURCE_DIR/node_modules" "$CACHE_DIR/"
 fi
 
 # Related to https://github.com/meteor/meteor/issues/2796 and
