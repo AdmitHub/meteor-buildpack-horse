@@ -1,272 +1,40 @@
 #!/bin/bash
-
-#
-# Heroku buildpack for Meteor
-#
-
-function invalidate_cache_if_needed() {
-  PACKAGE_JSON_HASH=$(sha256sum "$APP_SOURCE_DIR/package.json" | awk '{ print $1 }')
-  CACHE_HASH_FILE="$CACHE_DIR/package.json.hash"
-
-  if [ -f "$CACHE_HASH_FILE" ]; then
-    STORED_HASH=$(cat "$CACHE_HASH_FILE")
-    if [ "$PACKAGE_JSON_HASH" != "$STORED_HASH" ]; then
-      echo "-----> Detected changes in package.json, invalidating node_modules cache"
-      rm -rf "$CACHE_DIR/node_modules"
-    fi
-  else
-    echo "-----> No previous package.json hash found, invalidating node_modules cache"
-    rm -rf "$CACHE_DIR/node_modules"
-  fi
-
-  echo "$PACKAGE_JSON_HASH" > "$CACHE_HASH_FILE"
-}
-
-
-# fail fast.
 set -e
-# debug verbosely.
-#set -x
 
-# Load config vars into environment (from https://devcenter.heroku.com/articles/buildpack-api)
-export_env_dir() {
-  env_dir=$1
-  whitelist_regex=${2:-''}
-  blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
-  if [ -d "$env_dir" ]; then
-    for e in $(ls $env_dir); do
-      echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
-      export "$e=$(cat $env_dir/$e)"
-      :
-    done
-  fi
-}
-
-export_env_dir $3
-
-
-# Get the path to dir one above this file.
+# Define directories
 BUILDPACK_DIR=$(cd -P -- "$(dirname -- "$0")" && cd .. && pwd -P)
-# Get the directory our app is checked out in (the "BUILD_DIR"), passed by Heroku
 APP_CHECKOUT_DIR=$1
 CACHE_DIR=$2
-if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
-  echo "-----> Clearing cache dir."
-  rm -rf "$CACHE_DIR/*"
-fi
-
-#
-# Find the meteor app ($APP_SOURCE_DIR).
-#
-
-# Set meteor app dir's location to the root of the git repo, plus the value of
-# METEOR_APP_DIR (which defaults empty).  If you put the meteor app in src/ or
-# some other subdirectory, define METEOR_APP_DIR.
 APP_SOURCE_DIR="${APP_CHECKOUT_DIR}"
-if [ -n "$METEOR_APP_DIR" ]; then
-  APP_SOURCE_DIR="${APP_SOURCE_DIR}/${METEOR_APP_DIR}"
-fi
 
-# Try "$APP_SOURCE_DIR/app/" if meteor app isn't there (the "Iron scaffolding
-# tool" default).
-if [ ! -d "$APP_SOURCE_DIR/.meteor" ] && [ -d "$APP_SOURCE_DIR/app/.meteor" ]; then
-  APP_SOURCE_DIR="$APP_SOURCE_DIR/app/"
-fi
+# Check for Meteor app
 if [ ! -d "$APP_SOURCE_DIR/.meteor" ]; then
-  echo "FATAL: Can't find meteor app. Set METEOR_APP_DIR to the relative location of the meteor app within your repository if it's not in the root or 'app/' subdirectory.  (Tried ${APP_SOURCE_DIR})"
+  echo "FATAL: Can't find Meteor app."
   exit 1
 fi
 
-# Where we will install meteor. Has to be outside the APP_CHECKOUT_DIR.
+# Environment setup
+export ROOT_URL=${ROOT_URL:-"http://localhost:3000"} # Set default ROOT_URL if not set
+
+# Install Meteor
 METEOR_DIR="$CACHE_DIR/meteor"
-# Where we'll put things we compile.
-COMPILE_DIR_SUFFIX=".meteor/heroku_build"
-COMPILE_DIR="$APP_CHECKOUT_DIR"/"$COMPILE_DIR_SUFFIX"
-# Try to minimize meteor's printing, unless we're running verbosely.
-if [ -z "$BUILDPACK_VERBOSE" ]; then
-  METEOR_PRETTY_OUTPUT=0
-fi
-
-# Create directories as needed.
-mkdir -p "$APP_CHECKOUT_DIR" "$METEOR_DIR"
-mkdir -p "$COMPILE_DIR" "$COMPILE_DIR/bin" "$COMPILE_DIR/lib"
-
-# Set a default ROOT_URL if one is not defined. Currently, HEROKU_APP_NAME is
-# only available if you enable the labs addon "Heroku Dyno Metadata":
-# https://devcenter.heroku.com/articles/dyno-metadata
-# This logic is duplicated in extra/root_url.sh so that it repeats on dyno
-# restart.
-if [ -z "$ROOT_URL" ] && [ -n "$HEROKU_APP_NAME" ] ; then
-  export ROOT_URL="https://${HEROKU_APP_NAME}.herokuapp.com"
-fi
-if [ -z "$ROOT_URL" ] ; then
-  echo "FATAL: ROOT_URL is not defined."
-  exit 1
-fi
-
-#
-# Install meteor
-#
-
-# Install the latest meteor, and rely on meteor to upgrade/downgrade itself to
-# the .meteor/release target.
-if [ -e "$METEOR_DIR/.meteor/meteor" ]; then
-  echo "-----> Existing meteor installation found, using it."
-else
-  echo "-----> Installing meteor"
+mkdir -p "$METEOR_DIR"
+if [ ! -e "$METEOR_DIR/.meteor/meteor" ]; then
   curl -sS "https://install.meteor.com/" | HOME="$METEOR_DIR" /bin/sh
 fi
-# Function to execute meteor with proper HOME.
+
 function METEOR {
-  ARGS=$@
-  HOME="$METEOR_DIR" "$METEOR_DIR/.meteor/meteor" $ARGS
+  HOME="$METEOR_DIR" "$METEOR_DIR/.meteor/meteor" "$@"
 }
 
-#
-# Build the meteor app!
-#
-
-# Change into the project directory. Once we're there, 'meteor' commands will
-# run with the context of the target release (project .meteor/release) rather
-# than the "latest" that is installed by install.meteor.com.
+# Building Meteor app
 cd "$APP_SOURCE_DIR"
-
-echo "-----> Target Meteor version: `METEOR --version`"
-
-# Deal with non-server build targets.  Determine if we have --server-only flag
-# capability (Meteor 1.3 and up).
-echo "-----> Checking if this meteor version supports --server-only"
-# Allow non-zero return from grep.
-set +e
-set -e
-  SERVER_ONLY_FLAG='--server-only'
-# Remove the Android platform if we don't support the --server-only flag
-# (Meteor 1.2 and below).  iOS platform gets ignored properly.
-if [ -z "$SERVER_ONLY_FLAG" ]; then
-  echo "-----> Attempting to remove android platform."
-  METEOR remove-platform android || true
-  echo "-----> Moving on."
-fi
-
-# Identify the npm/node to use. We need to copy the node binary out to get the
-# correct version in the built slug (e.g. 0.10.x for Meteor<1.4, 4.x for
-# Meteor>=1.4).  We can't copy the whole meteor world because that's too large
-# (Issue #125).
-
-# Query node for its own path. As long as the Meteor version we got from
-# install.meteor.com is >=1.3, "meteor node" is available, even if the target
-# release predates that feature.
-METEOR_NODE=`METEOR node -e "process.stdout.write(process.execPath)"`
-# Assume npm is in the same dir as node.
-METEOR_NPM="`dirname "$METEOR_NODE"`/npm"
-
-if [ -z "$METEOR_NPM" ] || [ -z "$METEOR_NODE" ] ; then
-  echo "FATAL: Can't find npm/node within meteor bundle. This is a bug. Please open an issue at https://github.com/AdmitHub/meteor-buildpack-horse.";
-  exit 1
-fi
-
-# Copy node into place for production.
-NODE="$COMPILE_DIR"/bin/node
-cp "$METEOR_NODE" "$NODE"
-chmod a+x "$NODE"
-
-# Add npm and node path so that 1.4's npm-rebuild.js will function.
-PATH="$METEOR_DIR/.meteor:`dirname $METEOR_NPM`:$COMPILE_DIR/bin:$PATH"
-
-echo "-----> Using node: `$NODE --version`"
-echo "----->    and npm: `$METEOR_NPM --version`"
-
-# If we use npm on root, run npm install.  Don't use `--production` here, as we
-# may need devDependencies (e.g. webpack) in order to build the meteor app.
-if [ -e "$APP_SOURCE_DIR"/package.json ]; then
-  # Invalidate node_modules cache if needed
-  invalidate_cache_if_needed
-
-  # Restore node_modules from cache
-  if [ -d "$CACHE_DIR/node_modules" ]; then
-    echo "-----> Restoring node_modules directory from cache"
-    cp -r "$CACHE_DIR/node_modules" "$APP_SOURCE_DIR/"
-  fi
-
-  $METEOR_NPM install --production
-
-  # Cache node_modules directory for faster builds
-  echo "-----> Caching node_modules directory for faster builds"
-  rm -rf "$CACHE_DIR/node_modules"
-  cp -r "$APP_SOURCE_DIR/node_modules" "$CACHE_DIR/"
-fi
-
-# Related to https://github.com/meteor/meteor/issues/2796 and
-# https://github.com/meteor/meteor/issues/2606.  Some packages only build their
-# assets at runtime, and thus they are not available for bundling unless meteor
-# has been launched.  To opt-in to this, set BUILDPACK_PRELAUNCH_METEOR=1.
-if [ -n "$BUILDPACK_PRELAUNCH_METEOR" ]; then
-  echo "-----> BUILDPACK_PRELAUNCH_METEOR: Pre-launching meteor to build packages assets"
-  # Remove the Android platform because it fails due to the Android tools not
-  # being installed, but leave the iOS platform because it's ignored.
-  METEOR remove-platform android || true
-  HOME=$METEOR_DIR timeout -s9 60 $METEOR_DIR/.meteor/meteor --settings settings.json || true
-fi
-
-# Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR during
-# bundling, or it will recurse, trying to bundle up its own bundling.
-
 echo "-----> Building Meteor app with ROOT_URL: $ROOT_URL"
-BUNDLE_DEST=`mktemp -d "$BUILDPACK_DIR/build-XXXX"`
+BUNDLE_DEST=$(mktemp -d "$BUILDPACK_DIR/build-XXXX")
+METEOR build --server $ROOT_URL --directory $BUNDLE_DEST --platforms web.browser
 
-# The actual invocation of `meteor build`!
-PLATFORMS="web.browser"
-
-echo "build options: $BUILD_OPTIONS"
-echo "root url: $ROOT_URL"
-echo "server only flag: $SERVER_ONLY_FLAG"
-echo "bundle dest: $BUNDLE_DEST"
-echo "platforms: $PLATFORMS"
-
-METEOR build $BUILD_OPTIONS --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST --platforms $PLATFORMS
-
-echo "-----> Moving built slug to $COMPILE_DIR/app"
-mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
+# Move built app
+mv $BUNDLE_DEST/bundle "$APP_CHECKOUT_DIR/app"
 rmdir $BUNDLE_DEST
 
-# Run npm install on the built slug; only for '--production' dependencies.
-echo "-----> Installing npm production dependencies on built slug"
-if [ -e "$COMPILE_DIR"/app/programs/server/package.json ]; then
-  cd "$COMPILE_DIR"/app/programs/server
-  $METEOR_NPM prune --production
-  $METEOR_NPM install --production
-  cd "$APP_SOURCE_DIR"
-fi
-
-#
-# Environment
-#
-# Add an export of PATH which includes our compile dir, etc.
-echo "-----> Adding PATH environment"
-mkdir -p "$APP_CHECKOUT_DIR"/.profile.d
-cat > "$APP_CHECKOUT_DIR"/.profile.d/path.sh <<EOF
-  #!/bin/sh
-  export PATH=\$HOME/$COMPILE_DIR_SUFFIX/bin:\$PATH
-  export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$HOME/$COMPILE_DIR_SUFFIX/lib
-EOF
-
-#
-# Extras
-#
-
-# source scripts in 'extra' dir, if any.  Create them for custom stuff like
-# binary dependencies, additional environment settings, etc.
-echo "-----> Running extras"
-for file in `ls "$BUILDPACK_DIR"/extra | sort`; do
-  . "$BUILDPACK_DIR"/extra/$file
-done
-
-#
-# Clear cache after build is done
-#
-if [ -n "$BUILDPACK_CLEAR_CACHE" ]; then
-  echo "-----> Clearing cache dir."
-  rm -rf $METEOR_DIR
-fi
-
-
+echo "Meteor app build complete."
